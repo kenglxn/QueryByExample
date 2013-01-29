@@ -2,6 +2,11 @@ QueryByExample:
 Flexible entity querying for JPA2 example objects of any type.
 The only requirement is that the field names match. It will pull any non-null field from the example and match a given entity class with the same fields.
 
+Dependencies:
+org.jboss.query.query-impl-reflection aka. Query API by @aslakknutsen: https://github.com/aslakknutsen/Query
+slf4j-api
+hibernate-entitymanager
+
 Examples:
 
 ```java
