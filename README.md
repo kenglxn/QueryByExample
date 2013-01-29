@@ -82,3 +82,4 @@ List<Entity> resultList =
         .list();
 ```
 
+see http://kenglxn.github.com/QueryByExample/javadocs/index.html and http://kenglxn.github.com/QueryByExample
