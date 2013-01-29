@@ -1,7 +1,5 @@
-QueryByExample
-
-A flexible query by example library for using JPA2
-QueryByExample enables querying an entity by passing in an example object, of any type.
+QueryByExample:
+Flexible entity querying for JPA2 example objects of any type.
 The only requirement is that the field names match. It will pull any non-null field from the example and match a given entity class with the same fields.
 
 Examples:
@@ -18,7 +16,7 @@ List<Entity> resultList =
 Entity item =
     new QueryByExample(entityManager)
         .query(Entity.class)
-        .example(new Pojo("foo))
+        .example(new Pojo("foo"))
         .item();
 
 // get and work with the underlying TypedQuery object (useful e.g. for paging)
