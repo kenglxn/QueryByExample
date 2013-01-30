@@ -1,6 +1,4 @@
-QueryByExample:
-Flexible JPA2 entity querying using example objects.
-The only requirement is that the field names match. 
+QueryByExample: Flexible JPA2 entity querying using example objects.
 
 There is a comprehensive javadoc here: http://kenglxn.github.com/QueryByExample
 Also have a look at the test class for examples: https://github.com/kenglxn/QueryByExample/blob/master/src/test/java/net/glxn/qbe/QueryByExampleTest.java
