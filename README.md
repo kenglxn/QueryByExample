@@ -1,6 +1,9 @@
 QueryByExample:
 Flexible JPA2 entity querying using example objects.
-The only requirement is that the field names match. It will pull any non-null field from the example and match a given entity class with the same fields.
+The only requirement is that the field names match. 
+
+There is a comprehensive javadoc here: http://kenglxn.github.com/QueryByExample/javadocs/index.html
+Also have a look at the test class for examples: https://github.com/kenglxn/QueryByExample/blob/master/src/test/java/net/glxn/qbe/QueryByExampleTest.java
 
 Dependencies:
 * org.jboss.query.query-impl-reflection aka. Query API by @aslakknutsen: https://github.com/aslakknutsen/Query
@@ -82,4 +85,3 @@ List<Entity> resultList =
         .list();
 ```
 
-see http://kenglxn.github.com/QueryByExample/javadocs/index.html and http://kenglxn.github.com/QueryByExample
