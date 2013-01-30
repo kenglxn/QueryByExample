@@ -6,7 +6,7 @@ There is a comprehensive javadoc here: http://kenglxn.github.com/QueryByExample
 Also have a look at the test class for examples: https://github.com/kenglxn/QueryByExample/blob/master/src/test/java/net/glxn/qbe/QueryByExampleTest.java
 
 Dependencies:
-* org.jboss.query.query-impl-reflection aka. Query API by [@aslakknutsen](https://github.com/aslakknutsen): https://github.com/aslakknutsen/Query
+* org.jboss.query.query-impl-reflection aka. [Query API](https://github.com/aslakknutsen/Query) by [@aslakknutsen](https://github.com/aslakknutsen)
 * slf4j-api
 * hibernate-entitymanager
 
