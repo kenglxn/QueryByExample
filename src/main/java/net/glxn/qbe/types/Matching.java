@@ -1,16 +1,16 @@
-package net.glxn.qbe;
+package net.glxn.qbe.types;
 
 /**
  * Designates the type of matching semantics will be used in the query criteria. <br/>
  * E.g. equals PART, like %PART, like PART%, like %PART%<br/>
  * <br/>
  * See:<br/>
- * * {@link MatchType#EXACT}<br/>
- * * {@link MatchType#START}<br/>
- * * {@link MatchType#END}<br/>
- * * {@link MatchType#MIDDLE}<br/>
+ * * {@link Matching#EXACT}<br/>
+ * * {@link Matching#START}<br/>
+ * * {@link Matching#END}<br/>
+ * * {@link Matching#MIDDLE}<br/>
  */
-public enum MatchType {
+public enum Matching {
     /**
      * Use exact match, i.e. equals
      */

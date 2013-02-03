@@ -5,6 +5,23 @@ There is a comprehensive javadoc here: http://kenglxn.github.com/QueryByExample
 
 Also have a look at the test class for examples: https://github.com/kenglxn/QueryByExample/blob/master/src/test/java/net/glxn/qbe/QueryByExampleTest.java
 
+To get started using QBE, just clone and build the project:
+```bash
+git clone git://github.com/kenglxn/QueryByExample.git
+cd QueryByExample/
+mvn clean install
+```
+and then add QBE as a dependency in your project
+```xml
+<dependency>
+    <groupId>net.glxn</groupId>
+    <artifactId>qbe</artifactId>
+    <version>1.1</version>
+</dependency>
+```
+
+If you don't want to clone and build yourself, simply grab the jars from here: https://github.com/kenglxn/QueryByExample/tree/master/dist
+
 Dependencies:
 * org.jboss.query.query-impl-reflection aka. [Query API](https://github.com/aslakknutsen/Query) by [@aslakknutsen] (https://github.com/aslakknutsen) (bundled)
 * slf4j-api
@@ -15,23 +32,23 @@ Examples:
 ```java
 // get a list of entities using an arbitrary pojo as example input
 List<Entity> resultList = 
-    new QueryByExample(entityManager)
+    QBE.using(entityManager)
         .query(Entity.class)
-        .example(new Pojo("foo"))
+        .by(new Pojo("foo"))
         .list();
 
 // get a single result using an arbitrary pojo as example input
 Entity item =
-    new QueryByExample(entityManager)
+    QBE.using(entityManager)
         .query(Entity.class)
-        .example(new Pojo("foo"))
+        .by(new Pojo("foo"))
         .item();
 
 // get and work with the underlying TypedQuery object (useful e.g. for paging)
 TypedQuery<Entity> query =
-    new QueryByExample(entityManager)
+    QBE.using(entityManager)
         .query(Entity.class)
-        .example(new Pojo("foo"))
+        .by(new Pojo("foo"))
         .getQuery();
 List<Entity> resultList =
     query
@@ -39,49 +56,49 @@ List<Entity> resultList =
         .setMaxResults(10)
         .getResultList();
 
-// override the MatchType logic (defaults to exact)
-new QueryByExample(entityManager)
+// override the Matching logic (defaults to exact)
+QBE.using(entityManager)
     .query(Entity.class)
-    .example(new Pojo("foo"))
-    .usingMatchType(MatchType.EXACT);
-new QueryByExample(entityManager)
+    .by(new Pojo("foo"))
+    .use(Matching.EXACT);
+QBE.using(entityManager)
     .query(Entity.class)
-    .example(new Pojo("foo"))
-    .usingMatchType(MatchType.START);
-new QueryByExample(entityManager)
+    .by(new Pojo("foo"))
+    .use(Matching.START);
+QBE.using(entityManager)
     .query(Entity.class)
-    .example(new Pojo("foo"))
-    .usingMatchType(MatchType.MIDDLE);
-new QueryByExample(entityManager)
+    .by(new Pojo("foo"))
+    .use(Matching.MIDDLE);
+QBE.using(entityManager)
     .query(Entity.class)]
-    .example(new Pojo("foo"))
-    .usingMatchType(MatchType.END);
+    .by(new Pojo("foo"))
+    .use(Matching.END);
 
-// override the JunctionType for multiple fields (defaults to AND)
+// override the Junction for multiple fields (defaults to AND)
 List<Entity> resultList =
-    new QueryByExample(entityManager)
+    QBE.using(entityManager)
         .query(Entity.class)
-        .example(example)
-        .usingJunctionType(JunctionType.OR)
+        .by(example)
+        .use(Junction.INTERSECTION)
         .list();
 
 // define the ordering of the result
 List<Entity> resultList =
-    new QueryByExample(entityManager)
+    QBE.using(entityManager)
         .query(Entity.class)
-        .example(new Pojo("foo"))
-        .usingMatchType(MatchType.START)
-        .order(fieldToOrderBy, OrderType.ASC)
+        .by(new Pojo("foo"))
+        .use(Matching.START)
+        .orderBy(fieldToOrderBy, Order.ASCENDING)
         .list();
 
 // define multiple fields for ordering semantics
 List<Entity> resultList =
-    new QueryByExample(entityManager)
+    QBE.using(entityManager)
         .query(Entity.class)
-        .example(new Pojo("foo"))
-        .usingMatchType(MatchType.START)
-        .order("firstName", OrderType.DESC)
-        .order("lastName", OrderType.ASC)
+        .by(new Pojo("foo"))
+        .use(Matching.START)
+        .orderBy("firstName", Order.DESCENDING)
+        .orderBy("lastName", Order.ASCENDING)
         .list();
 ```
 

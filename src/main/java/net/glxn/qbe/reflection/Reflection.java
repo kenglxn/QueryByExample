@@ -7,9 +7,9 @@ import java.util.*;
  * ReflectionUtil
  *
  * Class contains utility reflection methods.
- * See: {@link ReflectionUtil#hierarchy(Class)} and {@link ReflectionUtil#createInstance(Class)}
+ * See: {@link Reflection#hierarchy(Class)} and {@link Reflection#createInstance(Class)}
  */
-public class ReflectionUtil {
+public class Reflection {
 
     /**
      * This method returns a complete list of all {@link Class}es in the hierarchy of the object sent in as the argument including itself and all the way up to and including {@link Object}.<br/>
@@ -43,9 +43,9 @@ public class ReflectionUtil {
      * @param clazz class of the object you want instantiated. e.g. {@code User.class}
      * @param <T> the class type
      * @return an instance of the given class
-     * @throws ObjectInstantiationException if an instance could not be created
+     * @throws ReflectionException if an instance could not be created
      */
-    public static <T> T createInstance(Class<T> clazz) throws ObjectInstantiationException {
+    public static <T> T createInstance(Class<T> clazz) throws ReflectionException {
         String message = "Failed to create instance of type: " + clazz.getCanonicalName() + " Make sure the class has a no args constructor";
 
         T t;
@@ -56,10 +56,10 @@ public class ReflectionUtil {
             }
             t = declaredConstructor.newInstance();
         } catch (Exception e) {
-            throw new ObjectInstantiationException(message, e);
+            throw new ReflectionException(message, e);
         }
         if (t == null) {
-            throw new ObjectInstantiationException(message);
+            throw new ReflectionException(message);
         }
         return t;
     }

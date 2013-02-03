@@ -9,16 +9,20 @@ import javax.persistence.EntityManager;
  * and match a given entity class with the same fields.
  *
  * See:<br/>
- * {@link QueryByExample#QueryByExample(javax.persistence.EntityManager)}<br/>
- * {@link QueryByExample#query(Class)}<br/>
+ * {@link QBE#QBE(javax.persistence.EntityManager)}<br/>
+ * {@link QBE#query(Class)}<br/>
  */
-public class QueryByExample {
+public class QBE {
     private EntityManager entityManager;
 
+    private QBE(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
+
     /**
-     * Construct a new {@link QueryByExample} using the supplied entityManager<br/>
+     * Construct a new {@link QBE} using the supplied entityManager<br/>
      * <br/>
-     * The {@link QueryByExample} gives the ability to: <br/>
+     * The {@link QBE} gives the ability to: <br/>
      * * get a list of entities matching the given criteria {@link net.glxn.qbe.QBEExample#list()}<br/>
      * {@code new QueryByExample(entityManager).query(UserEntity.class).example(new User("foo")).list()}<br/><br/>
      * * get a single entity matching the given criteria {@link net.glxn.qbe.QBEExample#item()}<br/>
@@ -29,13 +33,13 @@ public class QueryByExample {
      *
      * @param entityManager the entityManager to use to create the queries.
      */
-    public QueryByExample(EntityManager entityManager) {
-        this.entityManager = entityManager;
+    public static QBE using(EntityManager entityManager) {
+        return new QBE(entityManager);
     }
 
     /**
      * Create a {@link QBEQuery} for the given JPA entity class.
-     * @param entityClass a JPA entity class. Must be known to the entityManager this {@link QueryByExample} instance was created with
+     * @param entityClass a JPA entity class. Must be known to the entityManager this {@link QBE} instance was created with
      * @param <E> the entity class type
      * @return a new {@link QBEQuery} for the given entity class
      */

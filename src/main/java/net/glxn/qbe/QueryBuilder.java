@@ -1,49 +1,35 @@
 package net.glxn.qbe;
 
-import javax.persistence.Column;
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.xml.bind.annotation.XmlElement;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-
-import net.glxn.qbe.reflection.*;
+import net.glxn.qbe.exception.*;
+import net.glxn.qbe.types.*;
 import org.jboss.query.reflection.api.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 
-import static net.glxn.qbe.reflection.ReflectionUtil.hierarchy;
+import javax.persistence.*;
+import javax.persistence.criteria.*;
+import java.lang.reflect.*;
+import java.util.*;
+
+import static net.glxn.qbe.reflection.Reflection.*;
 
 public class QueryBuilder<T, E> {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final T example;
     private final Class<E> entityClass;
     private final EntityManager entityManager;
-    private net.glxn.qbe.MatchType matchType;
-    private JunctionType junctionType;
     private CriteriaBuilder cb;
     private CriteriaQuery<E> criteriaQuery;
     private Root<E> root;
     private final LinkedList<QBEOrder> qbeOrders = new LinkedList<QBEOrder>();
+    Matching matching;
+    Junction junction;
 
-    QueryBuilder(T example, Class<E> entityClass, EntityManager entityManager, MatchType matchType, JunctionType junctionType) {
+    QueryBuilder(T example, Class<E> entityClass, EntityManager entityManager, Matching matching, Junction junction) {
         this.example = example;
         this.entityClass = entityClass;
         this.entityManager = entityManager;
-        this.matchType = matchType;
-        this.junctionType = junctionType;
+        this.matching = matching;
+        this.junction = junction;
     }
 
     TypedQuery<E> build() {
@@ -61,43 +47,44 @@ public class QueryBuilder<T, E> {
         } else if (criteria.size() == 1) {
             criteriaQuery.where(criteria.get(0));
         } else {
-            addJunctionedCriteria(criteria);
+            addJunctionCriteria(criteria);
         }
         addOrderByToCriteria();
     }
 
     private void addOrderByToCriteria() {
-        ArrayList<Order> orders = new ArrayList<Order>(qbeOrders.size());
+        ArrayList<javax.persistence.criteria.Order> orders = new ArrayList<javax.persistence.criteria.Order>(qbeOrders.size());
         for (QBEOrder qbeOrder : qbeOrders) {
-            Order order;
+            javax.persistence.criteria.Order order;
             Path<Object> path = root.get(qbeOrder.getFieldToOrderBy());
-            switch (qbeOrder.getOrderType()) {
-                case ASC:
+            switch (qbeOrder.getOrder()) {
+                case ASCENDING:
                     order = cb.asc(path);
                     break;
-                case DESC:
+                case DESCENDING:
                     order = cb.desc(path);
                     break;
                 default:
-                    throw new UnsupportedOperationException("no handling implemented for orderType" + qbeOrder.getOrderType());
+                    throw new UnsupportedOperationException("no handling implemented for orderType" + qbeOrder.getOrder());
             }
             orders.add(order);
         }
-        if(orders.size() > 0) {
+        if (orders.size() > 0) {
             criteriaQuery.orderBy(orders);
         }
     }
 
-    private void addJunctionedCriteria(List<Predicate> criteria) {
-        switch (junctionType) {
-            case AND:
+    private void addJunctionCriteria(List<Predicate> criteria) {
+        switch (junction) {
+            case UNION:
                 criteriaQuery.where(cb.and(criteria.toArray(new Predicate[criteria.size()])));
                 break;
-            case OR:
+            case INTERSECTION:
                 criteriaQuery.where(cb.or(criteria.toArray(new Predicate[criteria.size()])));
                 break;
             default:
-                throw new UnsupportedOperationException("no case for " + JunctionType.class.getSimpleName() + " " + junctionType + " in switch");
+                throw new UnsupportedOperationException(
+                        "no case for " + Junction.class.getSimpleName() + " " + junction + " in switch");
         }
     }
 
@@ -113,10 +100,10 @@ public class QueryBuilder<T, E> {
 
         TypedQuery<E> query = entityManager.createQuery(criteriaQuery);
 
-        if (MatchType.MIDDLE == matchType || MatchType.END == matchType) {
+        if (Matching.MIDDLE == matching || Matching.END == matching) {
             wildcardPrefix = "%";
         }
-        if (MatchType.MIDDLE == matchType || MatchType.START == matchType) {
+        if (Matching.MIDDLE == matching || Matching.START == matching) {
             wildcardPostfix = "%";
         }
 
@@ -126,16 +113,18 @@ public class QueryBuilder<T, E> {
         return query;
     }
 
-    private List<Predicate> buildCriteriaBasedOnFieldsAndMatchType(HashMap<Field, Object> exampleFields, CriteriaBuilder cb, Root<E> ent) {
+    private List<Predicate> buildCriteriaBasedOnFieldsAndMatchType(HashMap<Field, Object> exampleFields, CriteriaBuilder cb,
+                                                                   Root<E> ent) {
         List<Predicate> criteria = new ArrayList<Predicate>();
         for (Field field : exampleFields.keySet()) {
-            if (matchType == MatchType.EXACT) {
+            if (matching == Matching.EXACT) {
                 criteria.add(cb.equal(ent.get(field.getName()), cb.parameter(field.getType(), field.getName())));
             } else {
                 if (String.class.equals(field.getType())) {
                     criteria.add(cb.like(ent.<String>get(field.getName()), cb.parameter(String.class, field.getName())));
                 } else {
-                    throw new UnsupportedOperationException("can not do " + matchType + " matching on field " + field.getName() + " of type " + field.getType());
+                    throw new UnsupportedOperationException(
+                            "can not do " + matching + " matching on field " + field.getName() + " of type " + field.getType());
                 }
             }
         }
@@ -173,55 +162,30 @@ public class QueryBuilder<T, E> {
         return entityFields;
     }
 
-    public void setJunctionType(JunctionType junctionType) {
-        this.junctionType = junctionType;
-    }
+    public void orderBy(String orderBy, net.glxn.qbe.types.Order order) {
+        String nameOfFieldToOrderBy = findFieldNameToOrderByForColumnAnnotation(orderBy);
 
-    public void setMatchType(MatchType matchType) {
-        this.matchType = matchType;
-    }
-
-    public void order(String orderBy, OrderType orderType) {
-        String nameOfFieldToOrderBy = findFieldNameToOrderByForXmlElementAnnotation(orderBy);
-
-        if(nameOfFieldToOrderBy == null) {
-            nameOfFieldToOrderBy = findFieldNameToOrderByForColumnAnnotation(orderBy);
-        }
-
-        if(nameOfFieldToOrderBy == null) {
+        if (nameOfFieldToOrderBy == null) {
             nameOfFieldToOrderBy = findFieldNameToOrderByForFieldNameOnClass(orderBy);
         }
 
-        if(nameOfFieldToOrderBy == null) {
+        if (nameOfFieldToOrderBy == null) {
             String message = "" +
-                "Unable to create order parameters for the supplied order by argument [" + orderBy + "] " +
-                "You must use on of the following: " +
-                "name property of the " + Column.class.getCanonicalName() + " annotation, " +
-                "name property of the " + XmlElement.class.getCanonicalName() + " annotation, " +
-                "or the name of the field on the class you are querying ";
+                    "Unable to create order parameters for the supplied order by argument [" + orderBy + "] " +
+                    "You must use on of the following: " +
+                    "name property of the " + Column.class.getCanonicalName() + " annotation " +
+                    "or the name of the field on the class you are querying ";
             throw new OrderCreationException(message);
         }
 
-        qbeOrders.add(new QBEOrder(nameOfFieldToOrderBy, orderType));
+        qbeOrders.add(new QBEOrder(nameOfFieldToOrderBy, order));
     }
 
     private String findFieldNameToOrderByForFieldNameOnClass(String orderBy) {
         String nameOfFieldToOrderBy = null;
         Field field = fieldMapForEntity(entityClass).get(orderBy);
-        if(field != null) {
+        if (field != null) {
             nameOfFieldToOrderBy = field.getName();
-        }
-        return nameOfFieldToOrderBy;
-    }
-
-    private String findFieldNameToOrderByForXmlElementAnnotation(String fieldToOrderBy) {
-        String nameOfFieldToOrderBy = null;
-        Collection<Field> fields = Query.forField().withAnnotation(XmlElement.class).run(hierarchy(example.getClass()));
-        for (Field field : fields) {
-            XmlElement xe = field.getAnnotation(XmlElement.class);
-            if (xe.name().equals(fieldToOrderBy)) {
-                nameOfFieldToOrderBy = field.getName();
-            }
         }
         return nameOfFieldToOrderBy;
     }

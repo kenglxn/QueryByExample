@@ -6,6 +6,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import net.glxn.qbe.exception.*;
+import net.glxn.qbe.types.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,11 +23,13 @@ import net.glxn.qbe.model.User;
 import net.glxn.qbe.model.UserEntity;
 import junit.framework.Assert;
 
+import static net.glxn.qbe.QBE.using;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "classpath:applicationContext-query-test.xml")
 @TransactionConfiguration(transactionManager = "txManager", defaultRollback = true)
 @Transactional(propagation = Propagation.REQUIRES_NEW)
-public class QueryByExampleTest {
+public class QBETest {
 
     @PersistenceContext
     protected EntityManager entityManager;
@@ -46,7 +50,7 @@ public class QueryByExampleTest {
     public void shouldBeAbleToListOnQueryUserByDisplayName() throws Exception {
         String expectedDisplayName = "displayname";
         entityManager.persist(new UserEntity("uname", expectedDisplayName, "fname", "lname"));
-        List<UserEntity> resultList = new QueryByExample(entityManager).query(UserEntity.class).example(new User(expectedDisplayName)).list();
+        List<UserEntity> resultList = using(entityManager).query(UserEntity.class).by(new User(expectedDisplayName)).list();
         Assert.assertNotNull(resultList);
         Assert.assertFalse(resultList.isEmpty());
         Assert.assertEquals(1, resultList.size());
@@ -59,7 +63,7 @@ public class QueryByExampleTest {
         String expectedDisplayName = "displayname";
         entityManager.persist(new UserEntity("uname", expectedDisplayName, "fname", "lname"));
 
-        UserEntity item = new QueryByExample(entityManager).query(UserEntity.class).example(new User(expectedDisplayName)).item();
+        UserEntity item = using(entityManager).query(UserEntity.class).by(new User(expectedDisplayName)).item();
         Assert.assertNotNull(item);
         Assert.assertEquals(expectedDisplayName, item.getDisplayName());
     }
@@ -69,7 +73,7 @@ public class QueryByExampleTest {
         String expectedDisplayName = "displayname";
         entityManager.persist(new UserEntity("uname", expectedDisplayName, "fname", "lname"));
 
-        TypedQuery<UserEntity> query = new QueryByExample(entityManager).query(UserEntity.class).example(new User(expectedDisplayName)).getQuery();
+        TypedQuery<UserEntity> query = using(entityManager).query(UserEntity.class).by(new User(expectedDisplayName)).getQuery();
         Assert.assertNotNull(query);
 
         List<UserEntity> resultList = query.setFirstResult(0).setMaxResults(10).getResultList();
@@ -81,7 +85,7 @@ public class QueryByExampleTest {
 
     @Test
     public void shouldMatchAllForEmptyExample() throws Exception {
-        List<UserEntity> resultList = new QueryByExample(entityManager).query(UserEntity.class).example(new User()).list();
+        List<UserEntity> resultList = using(entityManager).query(UserEntity.class).by(new User()).list();
         Assert.assertNotNull(resultList);
         Assert.assertFalse(resultList.isEmpty());
         Assert.assertEquals(NUMBER_OF_RANDOM_USERS, resultList.size());
@@ -89,7 +93,7 @@ public class QueryByExampleTest {
 
     @Test
     public void shouldBeAbleToPageTheQuery() throws Exception {
-        TypedQuery<UserEntity> query = new QueryByExample(entityManager).query(UserEntity.class).example(new User()).getQuery();
+        TypedQuery<UserEntity> query = using(entityManager).query(UserEntity.class).by(new User()).getQuery();
         query.setFirstResult(5);
         query.setMaxResults(2);
 
@@ -108,7 +112,7 @@ public class QueryByExampleTest {
         entityManager.persist(new UserEntity("uname", expectedDisplayName + "shouldNotMatchOnThisEnding", "fname", "lname"));
         entityManager.persist(new UserEntity("uname", "shouldNotMatchOnThisBeginning" + expectedDisplayName + "shouldNotMatchOnThisEnding", "fname", "lname"));
 
-        List<UserEntity> resultList = new QueryByExample(entityManager).query(UserEntity.class).example(new User(expectedDisplayName)).list();
+        List<UserEntity> resultList = using(entityManager).query(UserEntity.class).by(new User(expectedDisplayName)).list();
         Assert.assertNotNull(resultList);
         Assert.assertFalse(resultList.isEmpty());
         Assert.assertEquals(1, resultList.size());
@@ -123,7 +127,8 @@ public class QueryByExampleTest {
         entityManager.persist(new UserEntity("uname", expectedDisplayName + "_POST", "fname", "lname"));
         entityManager.persist(new UserEntity("uname", "PRE_" + expectedDisplayName + "_POST", "fname", "lname"));
 
-        List<UserEntity> resultList = new QueryByExample(entityManager).query(UserEntity.class).example(new User(expectedDisplayName)).usingMatchType(MatchType.EXACT).list();
+        List<UserEntity> resultList = using(entityManager).query(UserEntity.class).by(new User(expectedDisplayName)).use(
+                Matching.EXACT).list();
         Assert.assertNotNull(resultList);
         Assert.assertFalse(resultList.isEmpty());
         Assert.assertEquals(1, resultList.size());
@@ -138,7 +143,8 @@ public class QueryByExampleTest {
         entityManager.persist(new UserEntity("uname", expectedDisplayName + "_POST", "fname", "lname"));
         entityManager.persist(new UserEntity("uname", "PRE_" + expectedDisplayName + "_POST", "fname", "lname"));
 
-        List<UserEntity> resultList = new QueryByExample(entityManager).query(UserEntity.class).example(new User(expectedDisplayName)).usingMatchType(MatchType.START).list();
+        List<UserEntity> resultList = using(entityManager).query(UserEntity.class).by(new User(expectedDisplayName)).use(
+                Matching.START).list();
         Assert.assertNotNull(resultList);
         Assert.assertFalse(resultList.isEmpty());
         Assert.assertEquals(2, resultList.size());
@@ -155,7 +161,8 @@ public class QueryByExampleTest {
         entityManager.persist(new UserEntity("uname", expectedDisplayName + "_POST", "fname", "lname"));
         entityManager.persist(new UserEntity("uname", "PRE_" + expectedDisplayName + "_POST", "fname", "lname"));
 
-        List<UserEntity> resultList = new QueryByExample(entityManager).query(UserEntity.class).example(new User(expectedDisplayName)).usingMatchType(MatchType.END).list();
+        List<UserEntity> resultList = using(entityManager).query(UserEntity.class).by(new User(expectedDisplayName)).use(
+                Matching.END).list();
         Assert.assertNotNull(resultList);
         Assert.assertFalse(resultList.isEmpty());
         Assert.assertEquals(2, resultList.size());
@@ -172,7 +179,8 @@ public class QueryByExampleTest {
         entityManager.persist(new UserEntity("uname", expectedDisplayName + "_POST", "fname", "lname"));
         entityManager.persist(new UserEntity("uname", "PRE_" + expectedDisplayName + "_POST", "fname", "lname"));
 
-        List<UserEntity> resultList = new QueryByExample(entityManager).query(UserEntity.class).example(new User(expectedDisplayName)).usingMatchType(MatchType.MIDDLE).list();
+        List<UserEntity> resultList = using(entityManager).query(UserEntity.class).by(new User(expectedDisplayName)).use(
+                Matching.MIDDLE).list();
         Assert.assertNotNull(resultList);
         Assert.assertFalse(resultList.isEmpty());
         Assert.assertEquals(4, resultList.size());
@@ -186,7 +194,7 @@ public class QueryByExampleTest {
         User example = new User();
         example.setGender(Gender.FEMALE);
 
-        new QueryByExample(entityManager).query(UserEntity.class).example(example).usingMatchType(MatchType.MIDDLE).getQuery();
+        using(entityManager).query(UserEntity.class).by(example).use(Matching.MIDDLE).getQuery();
     }
 
     @Test
@@ -196,7 +204,8 @@ public class QueryByExampleTest {
 
         entityManager.persist(new UserEntity(expectedUserName, expectedDisplayName, "fname", "lname"));
 
-        List<UserEntity> resultList = new QueryByExample(entityManager).query(UserEntity.class).example(new User(expectedUserName, expectedDisplayName)).list();
+        List<UserEntity> resultList = using(entityManager).query(UserEntity.class).by(
+                new User(expectedUserName, expectedDisplayName)).list();
         Assert.assertNotNull(resultList);
         Assert.assertFalse(resultList.isEmpty());
         Assert.assertEquals(1, resultList.size());
@@ -214,10 +223,10 @@ public class QueryByExampleTest {
         entityManager.persist(new UserEntity(expectedUserName, "displayName", "fname", "lname"));
 
         List<UserEntity> resultList =
-            new QueryByExample(entityManager)
+            using(entityManager)
                 .query(UserEntity.class)
-                .example(example)
-                .usingJunctionType(JunctionType.OR)
+                .by(example)
+                .use(Junction.INTERSECTION)
                 .list();
 
         Assert.assertNotNull(resultList);
@@ -229,51 +238,27 @@ public class QueryByExampleTest {
     }
 
     @Test
-    public void shouldGiveOrderedResultSetUsingAnnotatedPropertyNameOfExampleClass() throws Exception {
-        createDataForOrderedTests();
-
-        String fieldToOrderBy = User.DISPLAY_NAME;
-        List<UserEntity> resultList =
-            new QueryByExample(entityManager)
-                .query(UserEntity.class)
-                .example(new User("dispname"))
-                .usingMatchType(MatchType.START)
-                .order(fieldToOrderBy, OrderType.ASC)
-                .list();
-        assertOrder(resultList, OrderType.ASC);
-
-        resultList =
-            new QueryByExample(entityManager)
-                .query(UserEntity.class)
-                .example(new User("dispname"))
-                .usingMatchType(MatchType.START)
-                .order(fieldToOrderBy, OrderType.DESC)
-                .list();
-        assertOrder(resultList, OrderType.DESC);
-    }
-
-    @Test
     public void shouldGiveOrderedResultSetUsingAnnotatedPropertyNameOfEntityClass() throws Exception {
         createDataForOrderedTests();
 
         String fieldToOrderBy = UserEntity.DISPLAY_NAME;
         List<UserEntity> resultList =
-            new QueryByExample(entityManager)
+            using(entityManager)
                 .query(UserEntity.class)
-                .example(new User("dispname"))
-                .usingMatchType(MatchType.START)
-                .order(fieldToOrderBy, OrderType.ASC)
+                .by(new User("dispname"))
+                .use(Matching.START)
+                .orderBy(fieldToOrderBy, Order.ASCENDING)
                 .list();
-        assertOrder(resultList, OrderType.ASC);
+        assertOrder(resultList, Order.ASCENDING);
 
         resultList =
-            new QueryByExample(entityManager)
+            using(entityManager)
                 .query(UserEntity.class)
-                .example(new User("dispname"))
-                .usingMatchType(MatchType.START)
-                .order(fieldToOrderBy, OrderType.DESC)
+                .by(new User("dispname"))
+                .use(Matching.START)
+                .orderBy(fieldToOrderBy, Order.DESCENDING)
                 .list();
-        assertOrder(resultList, OrderType.DESC);
+        assertOrder(resultList, Order.DESCENDING);
     }
 
     @Test
@@ -282,22 +267,22 @@ public class QueryByExampleTest {
 
         String fieldToOrderBy = "displayName";
         List<UserEntity> resultList =
-            new QueryByExample(entityManager)
+            using(entityManager)
                 .query(UserEntity.class)
-                .example(new User("dispname"))
-                .usingMatchType(MatchType.START)
-                .order(fieldToOrderBy, OrderType.ASC)
+                .by(new User("dispname"))
+                .use(Matching.START)
+                .orderBy(fieldToOrderBy, Order.ASCENDING)
                 .list();
-        assertOrder(resultList, OrderType.ASC);
+        assertOrder(resultList, Order.ASCENDING);
 
         resultList =
-            new QueryByExample(entityManager)
+            using(entityManager)
                 .query(UserEntity.class)
-                .example(new User("dispname"))
-                .usingMatchType(MatchType.START)
-                .order(fieldToOrderBy, OrderType.DESC)
+                .by(new User("dispname"))
+                .use(Matching.START)
+                .orderBy(fieldToOrderBy, Order.DESCENDING)
                 .list();
-        assertOrder(resultList, OrderType.DESC);
+        assertOrder(resultList, Order.DESCENDING);
     }
 
     @Test
@@ -309,12 +294,12 @@ public class QueryByExampleTest {
         entityManager.persist(new UserEntity("uname5", "dispname", "fname5", "lname5"));
 
         List<UserEntity> resultList =
-            new QueryByExample(entityManager)
+            using(entityManager)
                 .query(UserEntity.class)
-                .example(new User("dispname"))
-                .usingMatchType(MatchType.START)
-                .order("firstName", OrderType.DESC)
-                .order("displayName", OrderType.ASC)
+                .by(new User("dispname"))
+                .use(Matching.START)
+                .orderBy("firstName", Order.DESCENDING)
+                .orderBy("displayName", Order.ASCENDING)
                 .list();
         Assert.assertEquals(5, resultList.size());
         Assert.assertEquals("dispname", resultList.get(0).getDisplayName());
@@ -331,11 +316,11 @@ public class QueryByExampleTest {
 
     @Test(expected = OrderCreationException.class)
     public void shouldThrowExceptionForUnknownOrderByArgument() throws Exception {
-        new QueryByExample(entityManager)
+        using(entityManager)
             .query(UserEntity.class)
-            .example(new User("dispname"))
-            .usingMatchType(MatchType.START)
-            .order("someBogusFieldName", OrderType.ASC)
+            .by(new User("dispname"))
+            .use(Matching.START)
+            .orderBy("someBogusFieldName", Order.ASCENDING)
             .list();
     }
 
@@ -345,15 +330,15 @@ public class QueryByExampleTest {
         entityManager.persist(new UserEntity("uname3", "dispname3", "fname3", "lname3"));
     }
 
-    private void assertOrder(List<UserEntity> resultList, OrderType orderType) {
+    private void assertOrder(List<UserEntity> resultList, Order order) {
         Assert.assertEquals(3, resultList.size());
-        switch (orderType) {
-            case ASC:
+        switch (order) {
+            case ASCENDING:
                 Assert.assertEquals("dispname1", resultList.get(0).getDisplayName());
                 Assert.assertEquals("dispname2", resultList.get(1).getDisplayName());
                 Assert.assertEquals("dispname3", resultList.get(2).getDisplayName());
                 break;
-            case DESC:
+            case DESCENDING:
                 Assert.assertEquals("dispname3", resultList.get(0).getDisplayName());
                 Assert.assertEquals("dispname2", resultList.get(1).getDisplayName());
                 Assert.assertEquals("dispname1", resultList.get(2).getDisplayName());

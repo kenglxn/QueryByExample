@@ -1,4 +1,4 @@
-package net.glxn.qbe;
+package net.glxn.qbe.exception;
 
 public class OrderCreationException extends RuntimeException {
     public OrderCreationException(String message) {
