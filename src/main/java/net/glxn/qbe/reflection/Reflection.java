@@ -1,5 +1,7 @@
 package net.glxn.qbe.reflection;
 
+import net.glxn.qbe.reflection.exception.*;
+
 import java.lang.reflect.*;
 import java.util.*;
 
@@ -43,7 +45,7 @@ public class Reflection {
      * @param clazz class of the object you want instantiated. e.g. {@code User.class}
      * @param <T> the class type
      * @return an instance of the given class
-     * @throws ReflectionException if an instance could not be created
+     * @throws net.glxn.qbe.reflection.exception.ReflectionException if an instance could not be created
      */
     public static <T> T createInstance(Class<T> clazz) throws ReflectionException {
         String message = "Failed to create instance of type: " + clazz.getCanonicalName() + " Make sure the class has a no args constructor";

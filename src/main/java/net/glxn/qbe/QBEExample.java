@@ -24,7 +24,7 @@ public class QBEExample<T, E> {
     private final QueryBuilder<T, E> queryBuilder;
 
     QBEExample(T example, Class<E> entityClass, EntityManager entityManager) {
-        this.queryBuilder = new QueryBuilder<T, E>(example, entityClass, entityManager, Matching.EXACT, Junction.UNION);
+        queryBuilder = new QueryBuilder<T, E>(example, entityClass, entityManager, Matching.EXACT, Junction.UNION);
     }
 
     /**
@@ -61,7 +61,7 @@ public class QBEExample<T, E> {
      *          if the orderBy parameter can not be matched against any of the following paths as described in the parameter doc
      */
     public QBEExample<T, E> orderBy(String orderBy, Order order) throws OrderCreationException {
-        this.queryBuilder.orderBy(orderBy, order);
+        queryBuilder.orderBy(orderBy, order);
         return this;
     }
 

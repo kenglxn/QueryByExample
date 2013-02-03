@@ -20,7 +20,7 @@ public class QueryBuilder<T, E> {
     private CriteriaBuilder cb;
     private CriteriaQuery<E> criteriaQuery;
     private Root<E> root;
-    private final LinkedList<QBEOrder> qbeOrders = new LinkedList<QBEOrder>();
+    private final LinkedList<QBEOrder> ordering = new LinkedList<QBEOrder>();
     Matching matching;
     Junction junction;
 
@@ -41,7 +41,7 @@ public class QueryBuilder<T, E> {
 
     private void buildCriteria(HashMap<Field, Object> exampleFields) {
         criteriaQuery.select(root);
-        List<Predicate> criteria = buildCriteriaBasedOnFieldsAndMatchType(exampleFields, cb, root);
+        List<Predicate> criteria = buildCriteriaForFieldsAndMatching(exampleFields, cb, root);
         if (criteria.size() == 0) {
             log.warn("query by example running with no criteria");
         } else if (criteria.size() == 1) {
@@ -53,10 +53,10 @@ public class QueryBuilder<T, E> {
     }
 
     private void addOrderByToCriteria() {
-        ArrayList<javax.persistence.criteria.Order> orders = new ArrayList<javax.persistence.criteria.Order>(qbeOrders.size());
-        for (QBEOrder qbeOrder : qbeOrders) {
+        ArrayList<javax.persistence.criteria.Order> orders = new ArrayList<javax.persistence.criteria.Order>(ordering.size());
+        for (QBEOrder qbeOrder : ordering) {
             javax.persistence.criteria.Order order;
-            Path<Object> path = root.get(qbeOrder.getFieldToOrderBy());
+            Path<Object> path = root.get(qbeOrder.getOrderBy());
             switch (qbeOrder.getOrder()) {
                 case ASCENDING:
                     order = cb.asc(path);
@@ -113,8 +113,8 @@ public class QueryBuilder<T, E> {
         return query;
     }
 
-    private List<Predicate> buildCriteriaBasedOnFieldsAndMatchType(HashMap<Field, Object> exampleFields, CriteriaBuilder cb,
-                                                                   Root<E> ent) {
+    private List<Predicate> buildCriteriaForFieldsAndMatching(HashMap<Field, Object> exampleFields, CriteriaBuilder cb,
+                                                              Root<E> ent) {
         List<Predicate> criteria = new ArrayList<Predicate>();
         for (Field field : exampleFields.keySet()) {
             if (matching == Matching.EXACT) {
@@ -178,7 +178,7 @@ public class QueryBuilder<T, E> {
             throw new OrderCreationException(message);
         }
 
-        qbeOrders.add(new QBEOrder(nameOfFieldToOrderBy, order));
+        ordering.add(new QBEOrder(nameOfFieldToOrderBy, order));
     }
 
     private String findFieldNameToOrderByForFieldNameOnClass(String orderBy) {

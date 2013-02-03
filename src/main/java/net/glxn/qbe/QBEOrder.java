@@ -3,16 +3,16 @@ package net.glxn.qbe;
 import net.glxn.qbe.types.*;
 
 public class QBEOrder {
-    private final String fieldToOrderBy;
+    private final String orderBy;
     private final Order order;
 
     public QBEOrder(String fieldToOrderBy, Order order) {
-        this.fieldToOrderBy = fieldToOrderBy;
+        this.orderBy = fieldToOrderBy;
         this.order = order;
     }
 
-    public String getFieldToOrderBy() {
-        return fieldToOrderBy;
+    public String getOrderBy() {
+        return orderBy;
     }
 
     public Order getOrder() {
