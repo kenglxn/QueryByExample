@@ -56,7 +56,7 @@ List<Entity> resultList =
         .setMaxResults(10)
         .getResultList();
 
-// override the Matching logic (defaults to exact)
+// override the Matching logic (defaults to EXACT)
 QBE.using(entityManager)
     .query(Entity.class)
     .by(new Pojo("foo"))
@@ -74,7 +74,7 @@ QBE.using(entityManager)
     .by(new Pojo("foo"))
     .use(Matching.END);
 
-// override the Junction for multiple fields (defaults to AND)
+// override the Junction for multiple fields (defaults to UNION)
 List<Entity> resultList =
     QBE.using(entityManager)
         .query(Entity.class)
