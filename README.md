@@ -1,4 +1,4 @@
-QueryByExample: Flexible JPA2 entity querying using example objects.
+QueryByExample: Flexible JPA entity querying using example objects.
 
 
 There is a comprehensive javadoc here: http://kenglxn.github.com/QueryByExample
