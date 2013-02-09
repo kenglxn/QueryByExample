@@ -16,16 +16,20 @@ and then add QBE as a dependency in your project
 <dependency>
     <groupId>net.glxn</groupId>
     <artifactId>qbe</artifactId>
-    <version>1.1</version>
+    <version>1.2</version>
 </dependency>
 ```
 
 If you don't want to clone and build yourself, simply grab the jars from here: https://github.com/kenglxn/QueryByExample/tree/master/dist
 
+Then just run maven to install them into your local repo:
+```bash
+mvn install:install-file -Dfile=qbe-1.2.jar -DgroupId=net.glxn.qbe -DartifactId=qbe -Dversion=1.2 -Dpackaging=jar -DgeneratePom=true
+```
+
 Dependencies:
-* org.jboss.query.query-impl-reflection aka. [Query API](https://github.com/aslakknutsen/Query) by [@aslakknutsen] (https://github.com/aslakknutsen) (bundled)
-* slf4j-api
 * hibernate-entitymanager
+* slf4j-api
 
 Examples:
 

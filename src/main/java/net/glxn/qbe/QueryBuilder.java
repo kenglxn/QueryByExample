@@ -2,7 +2,6 @@ package net.glxn.qbe;
 
 import net.glxn.qbe.exception.*;
 import net.glxn.qbe.types.*;
-import org.jboss.query.reflection.api.Query;
 import org.slf4j.*;
 
 import javax.persistence.*;
@@ -10,6 +9,7 @@ import javax.persistence.criteria.*;
 import java.lang.reflect.*;
 import java.util.*;
 
+import static java.lang.String.*;
 import static net.glxn.qbe.reflection.Reflection.*;
 
 public class QueryBuilder<T, E> {
@@ -41,7 +41,7 @@ public class QueryBuilder<T, E> {
 
     private void buildCriteria(HashMap<Field, Object> exampleFields) {
         criteriaQuery.select(root);
-        List<Predicate> criteria = buildCriteriaForFieldsAndMatching(exampleFields, cb, root);
+        List<Predicate> criteria = buildCriteriaForFieldsAndMatching(exampleFields);
         if (criteria.size() == 0) {
             log.warn("query by example running with no criteria");
         } else if (criteria.size() == 1) {
@@ -83,8 +83,8 @@ public class QueryBuilder<T, E> {
                 criteriaQuery.where(cb.or(criteria.toArray(new Predicate[criteria.size()])));
                 break;
             default:
-                throw new UnsupportedOperationException(
-                        "no case for " + Junction.class.getSimpleName() + " " + junction + " in switch");
+                String message = format("no case for %s %s in switch", Junction.class.getSimpleName(), junction);
+                throw new UnsupportedOperationException(message);
         }
     }
 
@@ -113,18 +113,17 @@ public class QueryBuilder<T, E> {
         return query;
     }
 
-    private List<Predicate> buildCriteriaForFieldsAndMatching(HashMap<Field, Object> exampleFields, CriteriaBuilder cb,
-                                                              Root<E> ent) {
+    private List<Predicate> buildCriteriaForFieldsAndMatching(HashMap<Field, Object> fields) {
         List<Predicate> criteria = new ArrayList<Predicate>();
-        for (Field field : exampleFields.keySet()) {
+        for (Field field : fields.keySet()) {
             if (matching == Matching.EXACT) {
-                criteria.add(cb.equal(ent.get(field.getName()), cb.parameter(field.getType(), field.getName())));
+                criteria.add(cb.equal(root.get(field.getName()), cb.parameter(field.getType(), field.getName())));
             } else {
                 if (String.class.equals(field.getType())) {
-                    criteria.add(cb.like(ent.<String>get(field.getName()), cb.parameter(String.class, field.getName())));
+                    criteria.add(cb.like(root.<String>get(field.getName()), cb.parameter(String.class, field.getName())));
                 } else {
-                    throw new UnsupportedOperationException(
-                            "can not do " + matching + " matching on field " + field.getName() + " of type " + field.getType());
+                    String format = "can not do %s matching on field %s of type %s";
+                    throw new UnsupportedOperationException(format(format, matching, field.getName(), field.getType()));
                 }
             }
         }
@@ -135,7 +134,7 @@ public class QueryBuilder<T, E> {
         HashMap<Field, Object> exampleFields = new HashMap<Field, Object>();
 
         HashMap<String, Field> entityFields = fieldMapForEntity(entityClass);
-        Collection<Field> exampleFieldCollection = Query.forField().run(hierarchy(example.getClass()));
+        Collection<Field> exampleFieldCollection = fields(hierarchy(example.getClass()));
         for (Field field : exampleFieldCollection) {
             if (Modifier.isFinal(field.getModifiers()) || Modifier.isStatic(field.getModifiers())) {
                 continue;
@@ -145,7 +144,8 @@ public class QueryBuilder<T, E> {
             try {
                 value = field.get(example);
             } catch (IllegalAccessException e) {
-                log.debug("FAILED TO ACCESS FIELD " + field.getName() + " ON CLASS " + example.getClass());
+                Object[] args = {field.getName(), example.getClass(), e};
+                log.debug("FAILED TO ACCESS FIELD [%s] ON CLASS [%s]. Cause: %s", args);
             }
             if (value != null && entityFields.containsKey(field.getName())) {
                 exampleFields.put(field, value);
@@ -156,7 +156,7 @@ public class QueryBuilder<T, E> {
 
     private HashMap<String, Field> fieldMapForEntity(Class<E> entityClass) {
         HashMap<String, Field> entityFields = new HashMap<String, Field>();
-        for (Field field : Query.forField().run(hierarchy(entityClass))) {
+        for (Field field : fields(hierarchy(entityClass))) {
             entityFields.put(field.getName(), field);
         }
         return entityFields;
@@ -192,7 +192,7 @@ public class QueryBuilder<T, E> {
 
     private String findFieldNameToOrderByForColumnAnnotation(String fieldToOrderBy) {
         String nameOfFieldToOrderBy = null;
-        Collection<Field> fields = Query.forField().withAnnotation(Column.class).run(hierarchy(entityClass));
+        Collection<Field> fields = fieldsWithAnnotation(Column.class, hierarchy(entityClass));
         for (Field field : fields) {
             Column column = field.getAnnotation(Column.class);
             if (column.name().equals(fieldToOrderBy)) {

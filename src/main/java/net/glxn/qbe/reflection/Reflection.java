@@ -2,8 +2,13 @@ package net.glxn.qbe.reflection;
 
 import net.glxn.qbe.reflection.exception.*;
 
+import java.lang.annotation.*;
 import java.lang.reflect.*;
+import java.util.ArrayList;
 import java.util.*;
+
+import static java.lang.String.*;
+import static java.util.Arrays.*;
 
 /**
  * ReflectionUtil
@@ -48,7 +53,7 @@ public class Reflection {
      * @throws net.glxn.qbe.reflection.exception.ReflectionException if an instance could not be created
      */
     public static <T> T createInstance(Class<T> clazz) throws ReflectionException {
-        String message = "Failed to create instance of type: " + clazz.getCanonicalName() + " Make sure the class has a no args constructor";
+        String message = "Failed to create instance of type: %s Make sure the class has a no args constructor";
 
         T t;
         try {
@@ -61,9 +66,28 @@ public class Reflection {
             throw new ReflectionException(message, e);
         }
         if (t == null) {
-            throw new ReflectionException(message);
+            throw new ReflectionException(format(message, clazz.getCanonicalName()));
         }
         return t;
+    }
+
+    public static List<Field> fields(List<Class<?>> classes) {
+        ArrayList<Field> fields = new ArrayList<Field>();
+        for (Class<?> clazz : classes) {
+            fields.addAll(asList(clazz.getDeclaredFields()));
+        }
+        return fields;
+    }
+
+    public static Collection<Field> fieldsWithAnnotation(Class<? extends Annotation> annotation, List<Class<?>> classes) {
+        ArrayList<Field> fields = new ArrayList<Field>();
+        for (Field field : fields(classes)) {
+            Annotation fieldAnnotation = field.getAnnotation(annotation);
+            if (fieldAnnotation != null) {
+                fields.add(field);
+            }
+        }
+        return fields;
     }
 }
 
