@@ -7,6 +7,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
 import net.glxn.qbe.exception.*;
+import net.glxn.qbe.model.*;
 import net.glxn.qbe.types.*;
 import org.junit.After;
 import org.junit.Before;
@@ -18,12 +19,12 @@ import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import net.glxn.qbe.model.Gender;
-import net.glxn.qbe.model.User;
-import net.glxn.qbe.model.UserEntity;
+import net.glxn.qbe.model.PojoUser;
 import junit.framework.Assert;
 
-import static net.glxn.qbe.QBE.using;
+import static junit.framework.Assert.assertEquals;
+import static net.glxn.qbe.model.Gender.FEMALE;
+import static net.glxn.qbe.model.Gender.MALE;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "classpath:applicationContext-query-test.xml")
@@ -43,315 +44,320 @@ public class QBETest {
     @SuppressWarnings({"JpaQlInspection"})
     @After
     public void tearDown() throws Exception {
-        entityManager.createQuery("delete from UserEntity").executeUpdate();
+        entityManager.createQuery("delete from User").executeUpdate();
     }
 
     @Test
-    public void shouldBeAbleToListOnQueryUserByDisplayName() throws Exception {
-        String expectedDisplayName = "displayname";
-        entityManager.persist(new UserEntity("uname", expectedDisplayName, "fname", "lname"));
-        List<UserEntity> resultList = using(entityManager).query(UserEntity.class).by(new User(expectedDisplayName)).list();
-        Assert.assertNotNull(resultList);
-        Assert.assertFalse(resultList.isEmpty());
-        Assert.assertEquals(1, resultList.size());
-        Assert.assertEquals(expectedDisplayName, resultList.get(0).getDisplayName());
+    public void shouldGetListByExample() throws Exception {
+        User user = new User("nick", "foo@bar.com", MALE);
+        entityManager.persist(user);
+
+        List<User> resultList =
+                QBE.using(entityManager)
+                   .query(User.class)
+                   .by(new PojoUser(user.getNick()))
+                   .list();
+
+        assertEquals(1, resultList.size());
+        assertEquals(user.getNick(), resultList.get(0).getNick());
     }
 
 
     @Test
-    public void shouldBeAbleToItemOnQueryUserByDisplayName() throws Exception {
-        String expectedDisplayName = "displayname";
-        entityManager.persist(new UserEntity("uname", expectedDisplayName, "fname", "lname"));
+    public void shouldGetItemByExample() throws Exception {
+        User user = new User("nick", "foo@bar.com", MALE);
+        entityManager.persist(user);
 
-        UserEntity item = using(entityManager).query(UserEntity.class).by(new User(expectedDisplayName)).item();
-        Assert.assertNotNull(item);
-        Assert.assertEquals(expectedDisplayName, item.getDisplayName());
+        User item =
+                QBE.using(entityManager)
+                   .query(User.class)
+                   .by(new PojoUser(user.getNick()))
+                   .item();
+
+        assertEquals(user.getNick(), item.getNick());
     }
 
     @Test
-    public void shouldBeAbleToGetAndWorkWithQueryOnQueryUserByDisplayName() throws Exception {
-        String expectedDisplayName = "displayname";
-        entityManager.persist(new UserEntity("uname", expectedDisplayName, "fname", "lname"));
+    public void shouldGetQueryByExample() throws Exception {
+        User user = new User("nick", "foo@bar.com", MALE);
+        entityManager.persist(user);
 
-        TypedQuery<UserEntity> query = using(entityManager).query(UserEntity.class).by(new User(expectedDisplayName)).getQuery();
-        Assert.assertNotNull(query);
+        TypedQuery<User> query =
+                QBE.using(entityManager)
+                   .query(User.class)
+                   .by(new PojoUser(user.getNick()))
+                   .getQuery();
 
-        List<UserEntity> resultList = query.setFirstResult(0).setMaxResults(10).getResultList();
-        Assert.assertNotNull(resultList);
-        Assert.assertFalse(resultList.isEmpty());
-        Assert.assertEquals(1, resultList.size());
-        Assert.assertEquals(expectedDisplayName, resultList.get(0).getDisplayName());
+        List<User> resultList = query.setFirstResult(0).setMaxResults(10).getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals(user.getNick(), resultList.get(0).getNick());
     }
 
     @Test
     public void shouldMatchAllForEmptyExample() throws Exception {
-        List<UserEntity> resultList = using(entityManager).query(UserEntity.class).by(new User()).list();
-        Assert.assertNotNull(resultList);
-        Assert.assertFalse(resultList.isEmpty());
-        Assert.assertEquals(NUMBER_OF_RANDOM_USERS, resultList.size());
+        List<User> resultList =
+                QBE.using(entityManager)
+                   .query(User.class)
+                   .by(new PojoUser())
+                   .list();
+
+        assertEquals(NUMBER_OF_RANDOM_USERS, resultList.size());
     }
 
     @Test
-    public void shouldBeAbleToPageTheQuery() throws Exception {
-        TypedQuery<UserEntity> query = using(entityManager).query(UserEntity.class).by(new User()).getQuery();
+    public void shouldSupportPaging() throws Exception {
+        TypedQuery<User> query =
+                QBE.using(entityManager)
+                   .query(User.class)
+                   .by(new PojoUser())
+                   .getQuery();
+
         query.setFirstResult(5);
         query.setMaxResults(2);
 
-        List<UserEntity> resultList = query.getResultList();
+        List<User> resultList = query.getResultList();
 
-        Assert.assertNotNull(resultList);
-        Assert.assertFalse(resultList.isEmpty());
-        Assert.assertEquals(2, resultList.size());
+        assertEquals(2, resultList.size());
     }
 
     @Test
-    public void shouldMatchExactDisplayName() throws Exception {
-        String expectedDisplayName = "displayname";
-        entityManager.persist(new UserEntity("uname", "shouldNotMatchOnThisBeginning" + expectedDisplayName, "fname", "lname"));
-        entityManager.persist(new UserEntity("uname", expectedDisplayName, "fname", "lname"));
-        entityManager.persist(new UserEntity("uname", expectedDisplayName + "shouldNotMatchOnThisEnding", "fname", "lname"));
-        entityManager.persist(new UserEntity("uname", "shouldNotMatchOnThisBeginning" + expectedDisplayName + "shouldNotMatchOnThisEnding", "fname", "lname"));
+    public void shouldSupportExactMatching() throws Exception {
+        String nick = "nick";
+        String randomValue = randomValue();
 
-        List<UserEntity> resultList = using(entityManager).query(UserEntity.class).by(new User(expectedDisplayName)).list();
-        Assert.assertNotNull(resultList);
-        Assert.assertFalse(resultList.isEmpty());
-        Assert.assertEquals(1, resultList.size());
-        Assert.assertEquals(expectedDisplayName, resultList.get(0).getDisplayName());
+        entityManager.persist(new User(randomValue + nick, "foo@bar.com", MALE));
+        entityManager.persist(new User(nick, "foo@bar.com", MALE));
+        entityManager.persist(new User(nick + randomValue, "foo@bar.com", MALE));
+        entityManager.persist(new User(randomValue + nick + randomValue, "foo@bar.com", MALE));
+
+        List<User> resultList =
+                QBE.using(entityManager)
+                   .query(User.class)
+                   .by(new PojoUser(nick))
+                   .list();
+
+        assertEquals(1, resultList.size());
+        assertEquals(nick, resultList.get(0).getNick());
     }
 
     @Test
-    public void shouldMatchExactDisplayNameWhenExplicitlyPassingMatchTypeExact() throws Exception {
-        String expectedDisplayName = "displayname";
-        entityManager.persist(new UserEntity("uname", "PRE_" + expectedDisplayName, "fname", "lname"));
-        entityManager.persist(new UserEntity("uname", expectedDisplayName, "fname", "lname"));
-        entityManager.persist(new UserEntity("uname", expectedDisplayName + "_POST", "fname", "lname"));
-        entityManager.persist(new UserEntity("uname", "PRE_" + expectedDisplayName + "_POST", "fname", "lname"));
+    public void shouldSupportMatching() throws Exception {
+        String nick = "nick";
+        String randomValue = randomValue();
 
-        List<UserEntity> resultList = using(entityManager).query(UserEntity.class).by(new User(expectedDisplayName)).use(
-                Matching.EXACT).list();
-        Assert.assertNotNull(resultList);
-        Assert.assertFalse(resultList.isEmpty());
-        Assert.assertEquals(1, resultList.size());
-        Assert.assertEquals(expectedDisplayName, resultList.get(0).getDisplayName());
-    }
+        entityManager.persist(new User(randomValue + nick, "foo@bar.com", MALE));
+        entityManager.persist(new User(nick, "foo@bar.com", MALE));
+        entityManager.persist(new User(nick + randomValue, "foo@bar.com", MALE));
+        entityManager.persist(new User(randomValue + nick + randomValue, "foo@bar.com", MALE));
 
-    @Test
-    public void shouldMatchBeginnigDisplayName() throws Exception {
-        String expectedDisplayName = "displayname";
-        entityManager.persist(new UserEntity("uname", "PRE_" + expectedDisplayName, "fname", "lname"));
-        entityManager.persist(new UserEntity("uname", expectedDisplayName, "fname", "lname"));
-        entityManager.persist(new UserEntity("uname", expectedDisplayName + "_POST", "fname", "lname"));
-        entityManager.persist(new UserEntity("uname", "PRE_" + expectedDisplayName + "_POST", "fname", "lname"));
+        QBEExample<PojoUser, User> qbeExample = QBE.using(entityManager)
+                                                   .query(User.class)
+                                                   .by(new PojoUser(nick));
+        List<User> resultList =
+                qbeExample.use(Matching.EXACT)
+                          .list();
 
-        List<UserEntity> resultList = using(entityManager).query(UserEntity.class).by(new User(expectedDisplayName)).use(
-                Matching.START).list();
-        Assert.assertNotNull(resultList);
-        Assert.assertFalse(resultList.isEmpty());
-        Assert.assertEquals(2, resultList.size());
-        for (UserEntity userEntity : resultList) {
-            Assert.assertTrue(userEntity.getDisplayName().startsWith(expectedDisplayName));
+        assertEquals(1, resultList.size());
+        assertEquals(nick, resultList.get(0).getNick());
+
+        resultList =
+                qbeExample.use(Matching.START)
+                          .list();
+
+        assertEquals(2, resultList.size());
+        for (User user : resultList) {
+            Assert.assertTrue(user.getNick().startsWith(nick));
         }
-    }
 
-    @Test
-    public void shouldMatchEndDisplayName() throws Exception {
-        String expectedDisplayName = "displayname";
-        entityManager.persist(new UserEntity("uname", "PRE_" + expectedDisplayName, "fname", "lname"));
-        entityManager.persist(new UserEntity("uname", expectedDisplayName, "fname", "lname"));
-        entityManager.persist(new UserEntity("uname", expectedDisplayName + "_POST", "fname", "lname"));
-        entityManager.persist(new UserEntity("uname", "PRE_" + expectedDisplayName + "_POST", "fname", "lname"));
+        resultList =
+                qbeExample.use(Matching.END)
+                          .list();
 
-        List<UserEntity> resultList = using(entityManager).query(UserEntity.class).by(new User(expectedDisplayName)).use(
-                Matching.END).list();
-        Assert.assertNotNull(resultList);
-        Assert.assertFalse(resultList.isEmpty());
-        Assert.assertEquals(2, resultList.size());
-        for (UserEntity userEntity : resultList) {
-            Assert.assertTrue(userEntity.getDisplayName().endsWith(expectedDisplayName));
+        assertEquals(2, resultList.size());
+        for (User user : resultList) {
+            Assert.assertTrue(user.getNick().endsWith(nick));
         }
-    }
 
-    @Test
-    public void shouldMatchMiddleDisplayName() throws Exception {
-        String expectedDisplayName = "displayname";
-        entityManager.persist(new UserEntity("uname", "PRE_" + expectedDisplayName, "fname", "lname"));
-        entityManager.persist(new UserEntity("uname", expectedDisplayName, "fname", "lname"));
-        entityManager.persist(new UserEntity("uname", expectedDisplayName + "_POST", "fname", "lname"));
-        entityManager.persist(new UserEntity("uname", "PRE_" + expectedDisplayName + "_POST", "fname", "lname"));
+        resultList =
+                qbeExample.use(Matching.MIDDLE)
+                          .list();
 
-        List<UserEntity> resultList = using(entityManager).query(UserEntity.class).by(new User(expectedDisplayName)).use(
-                Matching.MIDDLE).list();
-        Assert.assertNotNull(resultList);
-        Assert.assertFalse(resultList.isEmpty());
-        Assert.assertEquals(4, resultList.size());
-        for (UserEntity userEntity : resultList) {
-            Assert.assertTrue(userEntity.getDisplayName().contains(expectedDisplayName));
+        assertEquals(4, resultList.size());
+        for (User user : resultList) {
+            Assert.assertTrue(user.getNick().contains(nick));
         }
     }
 
     @Test(expected = UnsupportedOperationException.class)
-    public void likeMatchOnFieldWithNonStringTypeShouldThrowException() throws Exception {
-        User example = new User();
-        example.setGender(Gender.FEMALE);
+    public void noneExactMatchingOnFieldWithNonStringTypeShouldThrowException() throws Exception {
+        PojoUser example = new PojoUser();
+        example.setGender(FEMALE);
 
-        using(entityManager).query(UserEntity.class).by(example).use(Matching.MIDDLE).getQuery();
+        QBE.using(entityManager)
+           .query(User.class)
+           .by(example)
+           .use(Matching.MIDDLE)
+           .getQuery();
     }
 
     @Test
-    public void shouldMatchExactDisplayNameAndUserName() throws Exception {
-        String expectedDisplayName = "SOMEDISPLAYNAME";
-        String expectedUserName = "SOMEUSERNAME";
+    public void shouldSupportMultipleFields() throws Exception {
+        User user = new User("nick", "email", FEMALE);
+        entityManager.persist(user);
 
-        entityManager.persist(new UserEntity(expectedUserName, expectedDisplayName, "fname", "lname"));
+        List<User> resultList =
+                QBE.using(entityManager)
+                   .query(User.class)
+                   .by(new PojoUser(user.getNick(), user.getEmail())).list();
 
-        List<UserEntity> resultList = using(entityManager).query(UserEntity.class).by(
-                new User(expectedUserName, expectedDisplayName)).list();
-        Assert.assertNotNull(resultList);
-        Assert.assertFalse(resultList.isEmpty());
-        Assert.assertEquals(1, resultList.size());
-        Assert.assertEquals(expectedUserName, resultList.get(0).getUserName());
-        Assert.assertEquals(expectedDisplayName, resultList.get(0).getDisplayName());
+        assertEquals(1, resultList.size());
+        assertEquals(user.getNick(), resultList.get(0).getNick());
+        assertEquals(user.getEmail(), resultList.get(0).getEmail());
     }
 
     @Test
-    public void shouldMatchExactDisplayNameOrUserName() throws Exception {
-        String expectedDisplayName = "SOMEDISPLAYNAME";
-        String expectedUserName = "SOMEUSERNAME";
-        User example = new User(expectedUserName, expectedDisplayName);
+    public void shouldSupportIntersection() throws Exception {
+        User user1 = new User(randomValue(), randomValue(), MALE);
+        User user2 = new User(randomValue(), randomValue(), MALE);
+        entityManager.persist(user1);
+        entityManager.persist(user2);
 
-        entityManager.persist(new UserEntity("uname", expectedDisplayName, "fname", "lname"));
-        entityManager.persist(new UserEntity(expectedUserName, "displayName", "fname", "lname"));
+        QBEExample<PojoUser, User> qbeExample = QBE.using(entityManager)
+                                                   .query(User.class)
+                                                   .by(new PojoUser(user1.getNick(), user2.getEmail()));
+        List<User> resultList = qbeExample.list();
 
-        List<UserEntity> resultList =
-            using(entityManager)
-                .query(UserEntity.class)
-                .by(example)
-                .use(Junction.INTERSECTION)
-                .list();
+        assertEquals(0, resultList.size());
 
-        Assert.assertNotNull(resultList);
-        Assert.assertFalse(resultList.isEmpty());
-        Assert.assertEquals(2, resultList.size());
-        for (UserEntity entity : resultList) {
-            Assert.assertTrue(expectedUserName.equals(entity.getUserName()) | expectedDisplayName.equals(entity.getDisplayName()));
+        resultList =
+                qbeExample.use(Junction.INTERSECTION)
+                          .list();
+
+        assertEquals(2, resultList.size());
+        for (User entity : resultList) {
+            Assert.assertTrue(user1.getNick().equals(entity.getNick()) | user2.getEmail().equals(entity.getEmail()));
         }
     }
 
     @Test
-    public void shouldGiveOrderedResultSetUsingAnnotatedPropertyNameOfEntityClass() throws Exception {
+    public void shouldOrderUsingColumnName() throws Exception {
         createDataForOrderedTests();
 
-        String fieldToOrderBy = UserEntity.DISPLAY_NAME;
-        List<UserEntity> resultList =
-            using(entityManager)
-                .query(UserEntity.class)
-                .by(new User("dispname"))
-                .use(Matching.START)
-                .orderBy(fieldToOrderBy, Order.ASCENDING)
-                .list();
+        String fieldToOrderBy = User.NICK_COLUMN_NAME;
+        List<User> resultList =
+                QBE.using(entityManager)
+                   .query(User.class)
+                   .by(new PojoUser("nick"))
+                   .use(Matching.START)
+                   .orderBy(fieldToOrderBy, Order.ASCENDING)
+                   .list();
         assertOrder(resultList, Order.ASCENDING);
 
         resultList =
-            using(entityManager)
-                .query(UserEntity.class)
-                .by(new User("dispname"))
-                .use(Matching.START)
-                .orderBy(fieldToOrderBy, Order.DESCENDING)
-                .list();
+                QBE.using(entityManager)
+                   .query(User.class)
+                   .by(new PojoUser("nick"))
+                   .use(Matching.START)
+                   .orderBy(fieldToOrderBy, Order.DESCENDING)
+                   .list();
         assertOrder(resultList, Order.DESCENDING);
     }
 
     @Test
-    public void shouldGiveOrderedResultSetUsingFieldName() throws Exception {
+    public void shouldOrderUsingFieldName() throws Exception {
         createDataForOrderedTests();
 
-        String fieldToOrderBy = "displayName";
-        List<UserEntity> resultList =
-            using(entityManager)
-                .query(UserEntity.class)
-                .by(new User("dispname"))
-                .use(Matching.START)
-                .orderBy(fieldToOrderBy, Order.ASCENDING)
-                .list();
+        String fieldToOrderBy = "nick";
+        List<User> resultList =
+                QBE.using(entityManager)
+                   .query(User.class)
+                   .by(new PojoUser("nick"))
+                   .use(Matching.START)
+                   .orderBy(fieldToOrderBy, Order.ASCENDING)
+                   .list();
         assertOrder(resultList, Order.ASCENDING);
 
         resultList =
-            using(entityManager)
-                .query(UserEntity.class)
-                .by(new User("dispname"))
-                .use(Matching.START)
-                .orderBy(fieldToOrderBy, Order.DESCENDING)
-                .list();
+                QBE.using(entityManager)
+                   .query(User.class)
+                   .by(new PojoUser("nick"))
+                   .use(Matching.START)
+                   .orderBy(fieldToOrderBy, Order.DESCENDING)
+                   .list();
         assertOrder(resultList, Order.DESCENDING);
     }
 
     @Test
     public void shouldGiveOrderedResultSetForMultipleOrders() throws Exception {
-        entityManager.persist(new UserEntity("uname1", "dispname1", "fname", "lname1"));
-        entityManager.persist(new UserEntity("uname2", "dispname2", "fname", "lname2"));
-        entityManager.persist(new UserEntity("uname3", "dispname", "fname3", "lname3"));
-        entityManager.persist(new UserEntity("uname4", "dispname", "fname4", "lname4"));
-        entityManager.persist(new UserEntity("uname5", "dispname", "fname5", "lname5"));
+        entityManager.persist(new User("nick", "email1", MALE));
+        entityManager.persist(new User("nick", "email2", MALE));
+        entityManager.persist(new User("nick3", "email", MALE));
+        entityManager.persist(new User("nick4", "email", MALE));
+        entityManager.persist(new User("nick5", "email", MALE));
 
-        List<UserEntity> resultList =
-            using(entityManager)
-                .query(UserEntity.class)
-                .by(new User("dispname"))
-                .use(Matching.START)
-                .orderBy("firstName", Order.DESCENDING)
-                .orderBy("displayName", Order.ASCENDING)
-                .list();
-        Assert.assertEquals(5, resultList.size());
-        Assert.assertEquals("dispname", resultList.get(0).getDisplayName());
-        Assert.assertEquals("fname5", resultList.get(0).getFirstName());
-        Assert.assertEquals("dispname", resultList.get(1).getDisplayName());
-        Assert.assertEquals("fname4", resultList.get(1).getFirstName());
-        Assert.assertEquals("dispname", resultList.get(2).getDisplayName());
-        Assert.assertEquals("fname3", resultList.get(2).getFirstName());
-        Assert.assertEquals("fname", resultList.get(3).getFirstName());
-        Assert.assertEquals("dispname1", resultList.get(3).getDisplayName());
-        Assert.assertEquals("fname", resultList.get(4).getFirstName());
-        Assert.assertEquals("dispname2", resultList.get(4).getDisplayName());
+        List<User> resultList =
+                QBE.using(entityManager)
+                   .query(User.class)
+                   .by(new PojoUser("nick"))
+                   .use(Matching.START)
+                   .orderBy("nick", Order.DESCENDING)
+                   .orderBy("email", Order.ASCENDING)
+                   .list();
+
+        assertEquals(5, resultList.size());
+        assertEquals("email", resultList.get(0).getEmail());
+        assertEquals("nick5", resultList.get(0).getNick());
+        assertEquals("email", resultList.get(1).getEmail());
+        assertEquals("nick4", resultList.get(1).getNick());
+        assertEquals("email", resultList.get(2).getEmail());
+        assertEquals("nick3", resultList.get(2).getNick());
+        assertEquals("email1", resultList.get(3).getEmail());
+        assertEquals("nick", resultList.get(3).getNick());
+        assertEquals("email2", resultList.get(4).getEmail());
+        assertEquals("nick", resultList.get(4).getNick());
     }
 
     @Test(expected = OrderCreationException.class)
     public void shouldThrowExceptionForUnknownOrderByArgument() throws Exception {
-        using(entityManager)
-            .query(UserEntity.class)
-            .by(new User("dispname"))
-            .use(Matching.START)
-            .orderBy("someBogusFieldName", Order.ASCENDING)
-            .list();
+        QBE.using(entityManager)
+           .query(User.class)
+           .by(new PojoUser("nick"))
+           .use(Matching.START)
+           .orderBy("someBogusFieldName", Order.ASCENDING)
+           .list();
     }
 
     private void createDataForOrderedTests() {
-        entityManager.persist(new UserEntity("uname1", "dispname1", "fname1", "lname1"));
-        entityManager.persist(new UserEntity("uname2", "dispname2", "fname2", "lname2"));
-        entityManager.persist(new UserEntity("uname3", "dispname3", "fname3", "lname3"));
+        entityManager.persist(new User("nick1", "email1", FEMALE));
+        entityManager.persist(new User("nick2", "email2", FEMALE));
+        entityManager.persist(new User("nick3", "email3", FEMALE));
     }
 
-    private void assertOrder(List<UserEntity> resultList, Order order) {
-        Assert.assertEquals(3, resultList.size());
+    private void assertOrder(List<User> resultList, Order order) {
+        assertEquals(3, resultList.size());
         switch (order) {
             case ASCENDING:
-                Assert.assertEquals("dispname1", resultList.get(0).getDisplayName());
-                Assert.assertEquals("dispname2", resultList.get(1).getDisplayName());
-                Assert.assertEquals("dispname3", resultList.get(2).getDisplayName());
+                assertEquals("nick1", resultList.get(0).getNick());
+                assertEquals("nick2", resultList.get(1).getNick());
+                assertEquals("nick3", resultList.get(2).getNick());
                 break;
             case DESCENDING:
-                Assert.assertEquals("dispname3", resultList.get(0).getDisplayName());
-                Assert.assertEquals("dispname2", resultList.get(1).getDisplayName());
-                Assert.assertEquals("dispname1", resultList.get(2).getDisplayName());
+                assertEquals("nick3", resultList.get(0).getNick());
+                assertEquals("nick2", resultList.get(1).getNick());
+                assertEquals("nick1", resultList.get(2).getNick());
                 break;
             default:
-                throw new RuntimeException("MUST BE ASC OR DESC FOR ASSERT");
+                throw new IllegalArgumentException("MUST BE ASC OR DESC FOR ASSERT");
         }
     }
 
     private void createRandomUsers(int numberOfUsers) {
         for (int i = 0; i < numberOfUsers; i++) {
-            String randomVal = UUID.randomUUID().toString();
-            entityManager.persist(new UserEntity(randomVal, randomVal, randomVal, randomVal));
+            entityManager.persist(new User(randomValue(), randomValue(), i % 2 == 0 ? MALE : FEMALE));
         }
+    }
+
+    private String randomValue() {
+        return UUID.randomUUID().toString();
     }
 }
