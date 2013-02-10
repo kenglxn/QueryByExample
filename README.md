@@ -29,7 +29,6 @@ mvn install:install-file -Dfile=qbe-1.2.jar -DgroupId=net.glxn.qbe -DartifactId=
 
 Dependencies:
 * hibernate-entitymanager
-* slf4j-api
 
 Examples:
 
