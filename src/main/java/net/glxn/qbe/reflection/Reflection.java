@@ -43,6 +43,16 @@ public class Reflection {
         return list;
     }
 
+    public static <T> T createInstance(String fqdn) {
+        Class<T> clazz = null;
+        try {
+            clazz = (Class<T>) ClassLoader.getSystemClassLoader().loadClass(fqdn);
+        } catch (ClassNotFoundException e) {
+            throw new ReflectionException("failed to create instance of class. Must be FQDN of a class on the classpath.", e);
+        }
+        return createInstance(clazz);
+    }
+
     /**
      * This method creates a new instance of the given class. <br/>
      * Class must have a no args constructor. The constructor can be below public access(e.g. private) but it must be present.<br/>
