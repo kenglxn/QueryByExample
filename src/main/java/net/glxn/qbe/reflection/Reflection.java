@@ -43,12 +43,23 @@ public class Reflection {
         return list;
     }
 
-    public static <T> T createInstance(String fqdn) {
-        Class<T> clazz = null;
+    /**
+     * This method attempts to load the given class using {@link ClassLoader#loadClass(String)}.
+     * Given that the class is found, it then creates an instance using {@link Reflection#createInstance(Class)}
+     *
+     * @param name the fully qualified name of the class to load
+     * @param <T> the type of the resulting class
+     * @return an instance of the class for the given fully qualified domain name
+     * @throws ReflectionException if the class is not found or if an instance can not be created
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T createInstance(String name) throws ReflectionException {
+        String message = "failed to create instance of class [%s]. Must be FQDN of a class on the classpath.";
+        Class<T> clazz;
         try {
-            clazz = (Class<T>) ClassLoader.getSystemClassLoader().loadClass(fqdn);
+            clazz = (Class<T>) ClassLoader.getSystemClassLoader().loadClass(name);
         } catch (ClassNotFoundException e) {
-            throw new ReflectionException("failed to create instance of class. Must be FQDN of a class on the classpath.", e);
+            throw new ReflectionException(format(message, name), e);
         }
         return createInstance(clazz);
     }
@@ -63,7 +74,7 @@ public class Reflection {
      * @throws net.glxn.qbe.reflection.exception.ReflectionException if an instance could not be created
      */
     public static <T> T createInstance(Class<T> clazz) throws ReflectionException {
-        String message = "Failed to create instance of type: %s Make sure the class has a no args constructor";
+        String message = "Failed to create instance of type [%s] Make sure the class has a no args constructor";
 
         T t;
         try {
