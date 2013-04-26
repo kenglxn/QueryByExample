@@ -1,87 +1,175 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=640" />
 
-    <title>kenglxn/QueryByExample @ GitHub</title>
+    <link rel="stylesheet" href="stylesheets/core.css" media="screen"/>
+    <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)"/>
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
 
-    <style type="text/css">
+    <script type="text/javascript" src="javascripts/modernizr.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="javascripts/headsmart.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $('#main_content').headsmart()
+      })
+    </script>
+    <title>QueryByExample by kenglxn</title>
+  </head>
 
-        body {
-            margin-top: 1.0em;
-            background-color: #ffffff;
-            font-family: Helvetica, Arial, FreeSans, san-serif, serif;
-            color: #000000;
-        }
+  <body>
+    <a id="forkme_banner" href="https://github.com/kenglxn/QueryByExample">View on GitHub</a>
+    <div class="shell">
 
-        #container {
-            margin: 0 auto;
-            width: 700px;
-        }
+      <header>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <h1>QueryByExample</h1>
+            <h2>JPA 2 query by example (qbe), a flexible entity query API</h2>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+      </header>
 
-        h1 {
-            font-size: 3.8em;
-            color: #2625d1;
-            margin-bottom: 3px;
-        }
+      <section id="downloads">
+        <span class="inner">
+          <a href="https://github.com/kenglxn/QueryByExample/zipball/master" class="zip"><em>download</em> .ZIP</a><a href="https://github.com/kenglxn/QueryByExample/tarball/master" class="tgz"><em>download</em> .TGZ</a>
+        </span>
+      </section>
 
-        h1 .small {
-            font-size: 0.4em;
-        }
 
-        h1 a {
-            text-decoration: none
-        }
+      <span class="banner-fix"></span>
 
-        h2 {
-            font-size: 1.5em;
-            color: #2625d1;
-        }
 
-        a {
-            color: #2625d1;
-        }
+      <section id="main_content">
+        <p>QueryByExample: Flexible JPA entity querying using example objects.</p>
 
-        .description {
-            font-size: 1.2em;
-            margin-bottom: 30px;
-            margin-top: 30px;
-            font-style: italic;
-        }
+<p>To get started using QBE, just clone and build the project:</p>
 
-        .footer {
-            text-align: center;
-            padding-top: 30px;
-            font-style: italic;
-        }
-    </style>
+<div class="highlight"><pre>git clone git://github.com/kenglxn/QueryByExample.git
+<span class="nb">cd </span>QueryByExample/
+mvn clean install
+</pre></div>
 
-</head>
+<p>and then add QBE as a dependency in your project</p>
 
-<body>
-<a href="https://github.com/kenglxn/QueryByExample"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"/></a>
+<div class="highlight"><pre><span class="nt">&lt;dependency&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>net.glxn<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>qbe<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>1.2<span class="nt">&lt;/version&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span>
+</pre></div>
 
-<div id="container">
+<p>If you don't want to clone and build yourself, simply grab the jars from here: <a href="https://github.com/kenglxn/QueryByExample/tree/master/dist">https://github.com/kenglxn/QueryByExample/tree/master/dist</a></p>
 
-    <h1>
-        <a href="https://github.com/kenglxn/QueryByExample">QueryByExample</a>
-        <span class="small">by <a href="https://github.com/kenglxn">kenglxn</a></span></h1>
+<p>Then just run maven to install them into your local repo:</p>
 
-    <div class="description">
-        JPA 2 query by example (qbe), a flexible entity query API.
+<div class="highlight"><pre>mvn install:install-file -Dfile<span class="o">=</span>qbe-1.2.jar -DgroupId<span class="o">=</span>net.glxn -DartifactId<span class="o">=</span>qbe -Dversion<span class="o">=</span>1.2 -Dpackaging<span class="o">=</span>jar -DgeneratePom<span class="o">=</span><span class="nb">true</span>
+</pre></div>
+
+<p>Dependencies:</p>
+
+<ul>
+<li>hibernate-entitymanager</li>
+</ul><p>Examples:</p>
+
+<div class="highlight"><pre><span class="c1">// get a list of entities using an arbitrary pojo as example input</span>
+<span class="n">List</span><span class="o">&lt;</span><span class="n">Entity</span><span class="o">&gt;</span> <span class="n">resultList</span> <span class="o">=</span> 
+    <span class="n">QBE</span><span class="o">.</span><span class="na">using</span><span class="o">(</span><span class="n">entityManager</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">query</span><span class="o">(</span><span class="n">Entity</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">by</span><span class="o">(</span><span class="k">new</span> <span class="n">Pojo</span><span class="o">(</span><span class="s">"foo"</span><span class="o">))</span>
+        <span class="o">.</span><span class="na">list</span><span class="o">();</span>
+
+<span class="c1">// get a single result using an arbitrary pojo as example input</span>
+<span class="n">Entity</span> <span class="n">item</span> <span class="o">=</span>
+    <span class="n">QBE</span><span class="o">.</span><span class="na">using</span><span class="o">(</span><span class="n">entityManager</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">query</span><span class="o">(</span><span class="n">Entity</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">by</span><span class="o">(</span><span class="k">new</span> <span class="n">Pojo</span><span class="o">(</span><span class="s">"foo"</span><span class="o">))</span>
+        <span class="o">.</span><span class="na">item</span><span class="o">();</span>
+
+<span class="c1">// get and work with the underlying TypedQuery object (useful e.g. for paging)</span>
+<span class="n">TypedQuery</span><span class="o">&lt;</span><span class="n">Entity</span><span class="o">&gt;</span> <span class="n">query</span> <span class="o">=</span>
+    <span class="n">QBE</span><span class="o">.</span><span class="na">using</span><span class="o">(</span><span class="n">entityManager</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">query</span><span class="o">(</span><span class="n">Entity</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">by</span><span class="o">(</span><span class="k">new</span> <span class="n">Pojo</span><span class="o">(</span><span class="s">"foo"</span><span class="o">))</span>
+        <span class="o">.</span><span class="na">getQuery</span><span class="o">();</span>
+<span class="n">List</span><span class="o">&lt;</span><span class="n">Entity</span><span class="o">&gt;</span> <span class="n">resultList</span> <span class="o">=</span>
+    <span class="n">query</span>
+        <span class="o">.</span><span class="na">setFirstResult</span><span class="o">(</span><span class="mi">0</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">setMaxResults</span><span class="o">(</span><span class="mi">10</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">getResultList</span><span class="o">();</span>
+
+<span class="c1">// override the Matching logic (defaults to EXACT)</span>
+<span class="n">QBE</span><span class="o">.</span><span class="na">using</span><span class="o">(</span><span class="n">entityManager</span><span class="o">)</span>
+    <span class="o">.</span><span class="na">query</span><span class="o">(</span><span class="n">Entity</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+    <span class="o">.</span><span class="na">by</span><span class="o">(</span><span class="k">new</span> <span class="n">Pojo</span><span class="o">(</span><span class="s">"foo"</span><span class="o">))</span>
+    <span class="o">.</span><span class="na">use</span><span class="o">(</span><span class="n">Matching</span><span class="o">.</span><span class="na">EXACT</span><span class="o">);</span>
+<span class="n">QBE</span><span class="o">.</span><span class="na">using</span><span class="o">(</span><span class="n">entityManager</span><span class="o">)</span>
+    <span class="o">.</span><span class="na">query</span><span class="o">(</span><span class="n">Entity</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+    <span class="o">.</span><span class="na">by</span><span class="o">(</span><span class="k">new</span> <span class="n">Pojo</span><span class="o">(</span><span class="s">"foo"</span><span class="o">))</span>
+    <span class="o">.</span><span class="na">use</span><span class="o">(</span><span class="n">Matching</span><span class="o">.</span><span class="na">START</span><span class="o">);</span>
+<span class="n">QBE</span><span class="o">.</span><span class="na">using</span><span class="o">(</span><span class="n">entityManager</span><span class="o">)</span>
+    <span class="o">.</span><span class="na">query</span><span class="o">(</span><span class="n">Entity</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+    <span class="o">.</span><span class="na">by</span><span class="o">(</span><span class="k">new</span> <span class="n">Pojo</span><span class="o">(</span><span class="s">"foo"</span><span class="o">))</span>
+    <span class="o">.</span><span class="na">use</span><span class="o">(</span><span class="n">Matching</span><span class="o">.</span><span class="na">MIDDLE</span><span class="o">);</span>
+<span class="n">QBE</span><span class="o">.</span><span class="na">using</span><span class="o">(</span><span class="n">entityManager</span><span class="o">)</span>
+    <span class="o">.</span><span class="na">query</span><span class="o">(</span><span class="n">Entity</span><span class="o">.</span><span class="na">class</span><span class="o">)]</span>
+    <span class="o">.</span><span class="na">by</span><span class="o">(</span><span class="k">new</span> <span class="n">Pojo</span><span class="o">(</span><span class="s">"foo"</span><span class="o">))</span>
+    <span class="o">.</span><span class="na">use</span><span class="o">(</span><span class="n">Matching</span><span class="o">.</span><span class="na">END</span><span class="o">);</span>
+
+<span class="c1">// override the Junction for multiple fields (defaults to UNION)</span>
+<span class="n">List</span><span class="o">&lt;</span><span class="n">Entity</span><span class="o">&gt;</span> <span class="n">resultList</span> <span class="o">=</span>
+    <span class="n">QBE</span><span class="o">.</span><span class="na">using</span><span class="o">(</span><span class="n">entityManager</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">query</span><span class="o">(</span><span class="n">Entity</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">by</span><span class="o">(</span><span class="n">example</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">use</span><span class="o">(</span><span class="n">Junction</span><span class="o">.</span><span class="na">INTERSECTION</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">list</span><span class="o">();</span>
+
+<span class="c1">// define the ordering of the result</span>
+<span class="n">List</span><span class="o">&lt;</span><span class="n">Entity</span><span class="o">&gt;</span> <span class="n">resultList</span> <span class="o">=</span>
+    <span class="n">QBE</span><span class="o">.</span><span class="na">using</span><span class="o">(</span><span class="n">entityManager</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">query</span><span class="o">(</span><span class="n">Entity</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">by</span><span class="o">(</span><span class="k">new</span> <span class="n">Pojo</span><span class="o">(</span><span class="s">"foo"</span><span class="o">))</span>
+        <span class="o">.</span><span class="na">use</span><span class="o">(</span><span class="n">Matching</span><span class="o">.</span><span class="na">START</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">orderBy</span><span class="o">(</span><span class="n">fieldToOrderBy</span><span class="o">,</span> <span class="n">Order</span><span class="o">.</span><span class="na">ASCENDING</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">list</span><span class="o">();</span>
+
+<span class="c1">// define multiple fields for ordering semantics</span>
+<span class="n">List</span><span class="o">&lt;</span><span class="n">Entity</span><span class="o">&gt;</span> <span class="n">resultList</span> <span class="o">=</span>
+    <span class="n">QBE</span><span class="o">.</span><span class="na">using</span><span class="o">(</span><span class="n">entityManager</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">query</span><span class="o">(</span><span class="n">Entity</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">by</span><span class="o">(</span><span class="k">new</span> <span class="n">Pojo</span><span class="o">(</span><span class="s">"foo"</span><span class="o">))</span>
+        <span class="o">.</span><span class="na">use</span><span class="o">(</span><span class="n">Matching</span><span class="o">.</span><span class="na">START</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">orderBy</span><span class="o">(</span><span class="s">"firstName"</span><span class="o">,</span> <span class="n">Order</span><span class="o">.</span><span class="na">DESCENDING</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">orderBy</span><span class="o">(</span><span class="s">"lastName"</span><span class="o">,</span> <span class="n">Order</span><span class="o">.</span><span class="na">ASCENDING</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">list</span><span class="o">();</span>
+</pre></div>
+
+<p>License:</p>
+
+<ul>
+<li><a href="http://www.apache.org/licenses/LICENSE-2.0.html">http://www.apache.org/licenses/LICENSE-2.0.html</a></li>
+</ul>
+      </section>
+
+      <footer>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <p>this project by <a href="https://github.com/kenglxn">kenglxn</a> can be found on <a href="https://github.com/kenglxn/QueryByExample">GitHub</a></p>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+        <p>Generated with <a href="http://pages.github.com">GitHub Pages</a> using Merlot</p>
+        <span class="octocat"></span>
+      </footer>
+
     </div>
 
-    <h2>Javadocs</h2>
-
-    <ul>
-        <li><a href="1.2/index.html">version 1.2</a></li>
-    </ul>
-
-    <div class="footer">
-        get the source code on GitHub : <a href="https://github.com/kenglxn/QueryByExample">kenglxn/QueryByExample</a>
-    </div>
-
-</div>
-
-</body>
+    
+  </body>
 </html>
