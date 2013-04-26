@@ -1,16 +1,13 @@
 QueryByExample: Flexible JPA entity querying using example objects.
 
 
-There is a comprehensive javadoc here: http://kenglxn.github.com/QueryByExample
-
-Also have a look at the test class for examples: https://github.com/kenglxn/QueryByExample/blob/master/src/test/java/net/glxn/qbe/QBETest.java
-
 To get started using QBE, just clone and build the project:
 ```bash
 git clone git://github.com/kenglxn/QueryByExample.git
 cd QueryByExample/
 mvn clean install
 ```
+
 and then add QBE as a dependency in your project
 ```xml
 <dependency>
@@ -24,7 +21,7 @@ If you don't want to clone and build yourself, simply grab the jars from here: h
 
 Then just run maven to install them into your local repo:
 ```bash
-mvn install:install-file -Dfile=qbe-1.2.jar -DgroupId=net.glxn.qbe -DartifactId=qbe -Dversion=1.2 -Dpackaging=jar -DgeneratePom=true
+mvn install:install-file -Dfile=qbe-1.2.jar -DgroupId=net.glxn -DartifactId=qbe -Dversion=1.2 -Dpackaging=jar -DgeneratePom=true
 ```
 
 Dependencies:
@@ -105,3 +102,5 @@ List<Entity> resultList =
         .list();
 ```
 
+License:
+* http://www.apache.org/licenses/LICENSE-2.0.html
