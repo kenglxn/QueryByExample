@@ -6,6 +6,7 @@
 
 QBE inspects the supplied example object and builds JPA Criteria based on the example objects field contents. 
 
+
 #### Dependencies:
 
 hibernate-entitymanager
@@ -106,6 +107,10 @@ List<Entity> resultList =
         .orderBy("lastName", Order.ASCENDING)
         .list();
 ```
+
+#### API Documentation
+
+Javadocs are located here: http://kenglxn.github.io/QueryByExample/apidocs/index.html
 
 #### License:
 
