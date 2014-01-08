@@ -1,5 +1,3 @@
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/kenglxn/querybyexample/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
 ### QBE: Flexible JPA entity querying using example objects.
 
 #### How does it work
