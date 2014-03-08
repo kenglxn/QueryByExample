@@ -1,3 +1,6 @@
+[![Donate](https://rawgithub.com/twolfson/gittip-badge/0.2.0/dist/gittip.png)](https://www.gittip.com/kenglxn/)
+
+
 ### QBE: Flexible JPA entity querying using example objects.
 
 #### How does it work
