@@ -1,31 +1,16 @@
 package net.glxn.qbe;
 
+import net.glxn.qbe.exception.*;
+import net.glxn.qbe.types.*;
+import org.slf4j.*;
+
+import javax.persistence.*;
+import javax.persistence.criteria.*;
+import java.lang.reflect.*;
+import java.util.*;
+
 import static java.lang.String.*;
 import static net.glxn.qbe.reflection.Reflection.*;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.persistence.Column;
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-
-import net.glxn.qbe.exception.OrderCreationException;
-import net.glxn.qbe.types.Junction;
-import net.glxn.qbe.types.Matching;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class QueryBuilder<T, E> {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -73,14 +58,14 @@ public class QueryBuilder<T, E> {
             javax.persistence.criteria.Order order;
             Path<Object> path = root.get(qbeOrder.getOrderBy());
             switch (qbeOrder.getOrder()) {
-            case ASCENDING:
-                order = cb.asc(path);
-                break;
-            case DESCENDING:
-                order = cb.desc(path);
-                break;
-            default:
-                throw new UnsupportedOperationException("no handling implemented for orderType" + qbeOrder.getOrder());
+                case ASCENDING:
+                    order = cb.asc(path);
+                    break;
+                case DESCENDING:
+                    order = cb.desc(path);
+                    break;
+                default:
+                    throw new UnsupportedOperationException("no handling implemented for orderType" + qbeOrder.getOrder());
             }
             orders.add(order);
         }
@@ -91,15 +76,15 @@ public class QueryBuilder<T, E> {
 
     private void addJunctionCriteria(List<Predicate> criteria) {
         switch (junction) {
-        case UNION:
-            criteriaQuery.where(cb.and(criteria.toArray(new Predicate[criteria.size()])));
-            break;
-        case INTERSECTION:
-            criteriaQuery.where(cb.or(criteria.toArray(new Predicate[criteria.size()])));
-            break;
-        default:
-            String message = format("no case for %s %s in switch", Junction.class.getSimpleName(), junction);
-            throw new UnsupportedOperationException(message);
+            case UNION:
+                criteriaQuery.where(cb.and(criteria.toArray(new Predicate[criteria.size()])));
+                break;
+            case INTERSECTION:
+                criteriaQuery.where(cb.or(criteria.toArray(new Predicate[criteria.size()])));
+                break;
+            default:
+                String message = format("no case for %s %s in switch", Junction.class.getSimpleName(), junction);
+                throw new UnsupportedOperationException(message);
         }
     }
 
@@ -123,7 +108,7 @@ public class QueryBuilder<T, E> {
         }
 
         for (Field field : exampleFields.keySet()) {
-
+            
             Class<?> fieldType = field.getType();
             Object value;
 
@@ -149,7 +134,7 @@ public class QueryBuilder<T, E> {
                 criteria.add(cb.equal(root.get(field.getName()), cb.parameter(field.getType(), field.getName())));
             } else {
                 if (String.class.equals(field.getType())) {
-                    criteria.add(cb.like(root.<String> get(field.getName()), cb.parameter(String.class, field.getName())));
+                    criteria.add(cb.like(root.<String>get(field.getName()), cb.parameter(String.class, field.getName())));
                 } else {
                     String format = "can not do %s matching on field %s of type %s";
                     throw new UnsupportedOperationException(format(format, matching, field.getName(), field.getType()));
@@ -173,7 +158,7 @@ public class QueryBuilder<T, E> {
             try {
                 value = field.get(example);
             } catch (IllegalAccessException e) {
-                Object[] args = { field.getName(), example.getClass(), e };
+                Object[] args = {field.getName(), example.getClass(), e};
                 log.debug("FAILED TO ACCESS FIELD [%s] ON CLASS [%s]. Cause: %s", args);
             }
             if (value != null && entityFields.containsKey(field.getName())) {
@@ -199,9 +184,11 @@ public class QueryBuilder<T, E> {
         }
 
         if (nameOfFieldToOrderBy == null) {
-            String message = "" + "Unable to create order parameters for the supplied order by argument [" + orderBy + "] "
-                    + "You must use on of the following: " + "name property of the " + Column.class.getCanonicalName() + " annotation "
-                    + "or the name of the field on the class you are querying ";
+            String message = "" +
+                    "Unable to create order parameters for the supplied order by argument [" + orderBy + "] " +
+                    "You must use on of the following: " +
+                    "name property of the " + Column.class.getCanonicalName() + " annotation " +
+                    "or the name of the field on the class you are querying ";
             throw new OrderCreationException(message);
         }
 
