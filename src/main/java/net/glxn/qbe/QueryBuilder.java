@@ -108,7 +108,21 @@ public class QueryBuilder<T, E> {
         }
 
         for (Field field : exampleFields.keySet()) {
-            query.setParameter(field.getName(), wildcardPrefix + exampleFields.get(field) + wildcardPostfix);
+            
+            Class<?> fieldType = field.getType();
+            Object value;
+
+            log.trace("Setting parameter for field [{}] with type [{}]", field, fieldType);
+
+            if (String.class.equals(fieldType)) {
+                log.trace("Field [{}] type is identified as a string", field);
+                value = wildcardPrefix + exampleFields.get(field) + wildcardPostfix;
+            } else {
+                log.trace("Field [{}] type is not identified as a string", field);
+                value = exampleFields.get(field);
+            }
+
+            query.setParameter(field.getName(), value);
         }
         return query;
     }
