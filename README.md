@@ -81,6 +81,14 @@ QBE.using(entityManager)
     .by(new Pojo("foo"))
     .use(Matching.END);
 
+// set the Case Sensitivity for the query (defaults to SENSITIVE)  
+// if the example has a property with string 'house', using this feature
+// it will search e.g for 'HOUSE', 'hOUse'...
+ QBE.using(entityManager)
+    .query(Entity.class)]
+    .by(example)
+    .use(Case.INSENSITIVE);
+
 // override the Junction for multiple fields (defaults to UNION)
 List<Entity> resultList =
     QBE.using(entityManager)
