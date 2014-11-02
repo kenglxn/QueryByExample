@@ -2,10 +2,12 @@ package net.glxn.qbe;
 
 import net.glxn.qbe.exception.*;
 import net.glxn.qbe.types.*;
+
 import org.slf4j.*;
 
 import javax.persistence.*;
 import javax.persistence.criteria.*;
+
 import java.lang.reflect.*;
 import java.util.*;
 
@@ -23,14 +25,17 @@ public class QueryBuilder<T, E> {
     private final LinkedList<QBEOrder> ordering = new LinkedList<QBEOrder>();
     Matching matching;
     Junction junction;
+	Case caseQuery;
 
-    QueryBuilder(T example, Class<E> entityClass, EntityManager entityManager, Matching matching, Junction junction) {
-        this.example = example;
-        this.entityClass = entityClass;
-        this.entityManager = entityManager;
-        this.matching = matching;
-        this.junction = junction;
-    }
+	QueryBuilder(T example, Class<E> entityClass, EntityManager entityManager,
+			Matching matching, Junction junction, Case caseQuery) {
+		this.example = example;
+		this.entityClass = entityClass;
+		this.entityManager = entityManager;
+		this.matching = matching;
+		this.junction = junction;
+		this.caseQuery = caseQuery;
+	}
 
     TypedQuery<E> build() {
         createCriteriaQueryAndRoot();
@@ -116,7 +121,17 @@ public class QueryBuilder<T, E> {
 
             if (String.class.equals(fieldType)) {
                 log.trace("Field [{}] type is identified as a string", field);
-                value = wildcardPrefix + exampleFields.get(field) + wildcardPostfix;
+                String valueString;
+				
+				valueString =  wildcardPrefix + exampleFields.get(field)
+						+ wildcardPostfix;
+				
+				if (caseQuery == Case.INSENSITIVE) {
+					value = valueString.toLowerCase();
+				}
+				else{
+					value = valueString;
+				}
             } else {
                 log.trace("Field [{}] type is not identified as a string", field);
                 value = exampleFields.get(field);
@@ -134,7 +149,15 @@ public class QueryBuilder<T, E> {
                 criteria.add(cb.equal(root.get(field.getName()), cb.parameter(field.getType(), field.getName())));
             } else {
                 if (String.class.equals(field.getType())) {
-                    criteria.add(cb.like(root.<String>get(field.getName()), cb.parameter(String.class, field.getName())));
+                	if (caseQuery == Case.INSENSITIVE) {
+						criteria.add(cb.like(
+								cb.lower(root.<String> get(field.getName())),
+								cb.parameter(String.class, field.getName())));
+					} else {
+						criteria.add(cb.like(
+								root.<String> get(field.getName()),
+								cb.parameter(String.class, field.getName())));
+					}
                 } else {
                     String format = "can not do %s matching on field %s of type %s";
                     throw new UnsupportedOperationException(format(format, matching, field.getName(), field.getType()));

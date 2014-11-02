@@ -4,8 +4,11 @@ import net.glxn.qbe.exception.*;
 import net.glxn.qbe.types.*;
 
 import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
+
+
 
 
 /**
@@ -24,7 +27,7 @@ public class QBEExample<T, E> {
     private final QueryBuilder<T, E> queryBuilder;
 
     QBEExample(T example, Class<E> entityClass, EntityManager entityManager) {
-        queryBuilder = new QueryBuilder<T, E>(example, entityClass, entityManager, Matching.EXACT, Junction.UNION);
+        queryBuilder = new QueryBuilder<T, E>(example, entityClass, entityManager, Matching.EXACT, Junction.UNION, Case.SENSITIVE);
     }
 
     /**
@@ -35,6 +38,17 @@ public class QBEExample<T, E> {
      */
     public QBEExample<T, E> use(Junction junction) {
         queryBuilder.junction = junction;
+        return this;
+    }
+    
+    /**
+     * overrides the {@link Case} on this object instance then returns itself
+     *
+     * @param Case {@link Case} you wish to use
+     * @return the QBEExample object instance
+     */
+    public QBEExample<T, E> use(Case caseQuery) {
+        queryBuilder.caseQuery = caseQuery;
         return this;
     }
 
