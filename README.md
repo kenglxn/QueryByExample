@@ -1,5 +1,7 @@
 ### QBE: Flexible JPA entity querying using example objects.
 
+Please consider [sponsoring](https://github.com/sponsors/kenglxn)
+
 #### How does it work
 
 QBE inspects the supplied example object and builds JPA Criteria based on the example objects field contents. 
